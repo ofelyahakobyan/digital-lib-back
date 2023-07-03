@@ -1,0 +1,44 @@
+{
+  "name": "elections-back",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "import": [
+      "./*.js"
+    ]
+  },
+  "scripts": {
+    "start": "nodemon --es-module-specifier-resolution=node -r dotenv/config ./bin/www.js",
+    "migrate": "node --es-module-specifier-resolution=node -r dotenv/config ./bin/migrate.js",
+    "start-prod": "node --es-module-specifier-resolution=node -r dotenv/config ./bin/www.js"
+  },
+  "dependencies": {
+    "cookie-parser": "^1.4.6",
+    "debug": "^4.3.4",
+    "dotenv": "^16.0.3",
+    "ejs": "^3.1.9",
+    "express": "^4.18.2",
+    "http-errors": "^2.0.0",
+    "joi": "^17.9.2",
+    "jsonwebtoken": "^9.0.0",
+    "lodash": "^4.17.21",
+    "md5": "^2.3.0",
+    "morgan": "^1.10.0",
+    "mysql2": "^3.3.3",
+    "nodemailer": "^6.9.3",
+    "sequelize": "^6.31.1",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^7.32.0 || ^8.2.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-node": "^4.1.0",
+    "eslint-config-prettier": "^8.8.0",
+    "eslint-plugin-import": "^2.25.2",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "nodemon": "^2.0.22",
+    "prettier": "^2.8.8"
+  }
+}
