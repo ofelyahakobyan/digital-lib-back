@@ -9,6 +9,7 @@ const EXCLUDE = [
   `POST:${BASE_URL}/user/login`,
   `POST:${BASE_URL}/user/forgot-password`,
   `POST:${BASE_URL}/user/reset-password`,
+  `GET:${BASE_URL}/books`,
 ];
 
 const authorization = (req, res, next) => {

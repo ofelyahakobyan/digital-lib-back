@@ -1,6 +1,6 @@
-import { Users } from '../models/index';
+import { Users, Categories, Authors, Languages, Publishers, Books } from '../models/index';
 
-const models = [Users];
+const models = [Users, Categories, Authors, Languages, Publishers, Books];
 
 async function main() {
   // eslint-disable-next-line no-restricted-syntax
@@ -10,4 +10,5 @@ async function main() {
   }
   process.exit(0);
 }
+
 main();

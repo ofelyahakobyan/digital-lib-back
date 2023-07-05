@@ -8,6 +8,8 @@ const EXCLUDE = [
   `POST:${BASE_URL}/user/login`,
   `POST:${BASE_URL}/user/forgot-password`,
   `POST:${BASE_URL}/user/reset-password`,
+  `GET:${BASE_URL}/books`,
+  `GET:${BASE_URL}/users`,
 ];
 
 const authorization = (req, res, next) => {
@@ -21,6 +23,8 @@ const authorization = (req, res, next) => {
     }
     const { authorization = '' } = req.headers;
     const { userID } = jwt.verify(authorization, JWT_SECRET);
+    // jwt verification failed
+    // customize error
     if (!userID) {
       throw HttpError(401);
     }
