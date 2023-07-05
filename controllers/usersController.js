@@ -11,6 +11,11 @@ const { JWT_SECRET } = process.env;
 class UsersController {
   static list = async (req, res, next) => {
     try {
+      const { userID, isAdmin } = req;
+      const user = await Users.findOne({ where: { id: userID, isAdmin } });
+      if (!user || !user.isAdmin) {
+        throw HttpError(401);
+      }
       let { page = 1, limit = 20 } = req.query;
       page = +page;
       limit = +limit;

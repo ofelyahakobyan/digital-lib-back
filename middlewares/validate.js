@@ -10,13 +10,13 @@ const validate = (schema) => (req, res, next) => {
       errors: { wrap: { label: '' } },
     });
     if (error) {
+      console.log(error.details);
       const errorDetails = {};
       error.details?.forEach((d) => {
         errorDetails[`${d.context.key}`] = d.message;
       });
       throw HttpError(422, { error: errorDetails });
     }
-
     next();
   } catch (er) {
     next(er);

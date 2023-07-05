@@ -3,8 +3,19 @@ import Joi from 'joi';
 const users = {
   list: {
     query: Joi.object({
-      page: Joi.number().integer().min(1),
-      limit: Joi.number().integer().min(1).max(20),
+      page: Joi.number().integer().min(1).messages({
+        'number.integer': '{#key} must be an integer',
+        'number.max': '{#key} must be less than or equal to 20',
+        'number.min': '{#key} must be more than or equal to 1',
+        'number.base': 'must be a number',
+      }),
+      limit: Joi.number().integer().min(1).max(20)
+        .messages({
+          'number.integer': '{#key} must be an integer',
+          'number.max': '{#key} must be less than or equal to 20',
+          'number.min': '{#key} must be more than or equal to 1',
+          'number.base': 'must be a number',
+        }),
     }),
   },
   login: {
@@ -17,17 +28,20 @@ const users = {
     body: Joi.object({
       firstName: Joi.string().alphanum().label('first name').required()
         .messages({
-          'any.required': '{#label} is required',
-          'string.alphanum': '{#label} may contain only letters or numbers',
-          'string.empty': '{#label} is not allowed to be empty',
+          'any.required': 'is required',
+          'string.alphanum': 'may contain only letters or numbers',
+          'string.empty': 'is not allowed to be empty',
         }),
       lastName: Joi.string().alphanum().label('last name')
-        .messages({ 'string.alphanum': '{#label} may contain only letters or numbers' }),
+        .messages({
+          'string.alphanum': 'may contain only letters or numbers',
+          'string.empty': 'is not allowed to be empty',
+        }),
       password: Joi.string().min(4).label('password').required()
         .messages({
-          'any.required': '{#label} is required',
-          'string.min': '{#label} should contain at least 4 characters',
-          'string.empty': '{#label} is not allowed to be empty',
+          'any.required': 'is required',
+          'string.min': 'should contain at least 4 characters',
+          'string.empty': 'is not allowed to be empty',
         }),
       email: Joi.string().email().lowercase().trim()
         .required()
