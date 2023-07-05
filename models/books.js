@@ -5,8 +5,7 @@ import Categories from './categories';
 import Publishers from './publishers';
 import Languages from './languages';
 
-class Books extends Model {
-}
+class Books extends Model {}
 
 Books.init(
   {
@@ -49,6 +48,7 @@ Books.init(
     sequelize,
     tableName: 'books',
     modelName: 'books',
+    paranoid: true,
   },
 );
 

@@ -4,3 +4,6 @@ export { default as Authors } from './authors';
 export { default as Languages } from './languages';
 export { default as Publishers } from './publishers';
 export { default as Books } from './books';
+export { default as Reviews } from './reviews';
+export { default as Reactions } from './reactions';
+export { default as Files } from './files';

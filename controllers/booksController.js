@@ -1,4 +1,6 @@
 import { Books } from '../models/index';
+import Authors from '../models/authors';
+import Files from '../models/files';
 
 class booksController {
   static list = async (req, res, next) => {
@@ -11,6 +13,16 @@ class booksController {
       const books = await Books.findAll({
         limit,
         offset,
+        include: [
+          {
+            model: Authors,
+            attributes: ['firstName', 'lastName', 'fullName'],
+          },
+          {
+            model: Files,
+            attributes: { exclude: ['bookId', 'createdAt', 'updatedAt'] },
+          },
+        ],
       });
       res.status(200).json({
         code: res.statusCode,
