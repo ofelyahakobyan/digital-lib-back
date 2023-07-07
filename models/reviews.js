@@ -7,7 +7,7 @@ class Reviews extends Model {}
 
 Reviews.init(
   {
-    id: {
+    reviewId: {
       type: DataTypes.BIGINT.UNSIGNED,
       primaryKey: true,
       autoIncrement: true,
@@ -20,13 +20,7 @@ Reviews.init(
     userId: { type: DataTypes.BIGINT.UNSIGNED, unique: 'compositeIndex' },
     title: { type: DataTypes.STRING },
     text: { type: DataTypes.TEXT },
-    rating: {
-      type: DataTypes.TINYINT.UNSIGNED,
-      validate: {
-        min: 1,
-        max: 5,
-      },
-    },
+    rating: { type: DataTypes.TINYINT.UNSIGNED },
   },
   {
     sequelize,

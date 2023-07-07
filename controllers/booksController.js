@@ -1,4 +1,5 @@
-import { Books, Authors, Files, Categories, Reviews } from '../models/index';
+import { Books, Authors, Categories, Reviews } from '../models/index';
+import sequelize from '../services/sequelize';
 
 class booksController {
   static list = async (req, res, next) => {
@@ -11,15 +12,27 @@ class booksController {
       const books = await Books.findAll({
         limit,
         offset,
+        attributes: {
+          include: [
+            [
+              sequelize.literal(
+                '(Select  count(bookId)  from reviews where bookId=id)',
+              ),
+              'totalReviews',
+            ],
+            [
+              sequelize.literal(
+                '(select  avg(rating)  as av  from reviews where bookId=id)',
+              ),
+              'averageRating',
+            ],
+          ],
+        },
         where: { $not: { status: 'unavailable' } },
         include: [
           {
             model: Authors,
-            attributes: ['firstName', 'lastName', 'fullName'],
-          },
-          {
-            model: Files,
-            attributes: { exclude: ['bookId', 'createdAt', 'updatedAt'] },
+            attributes: ['fullName'],
           },
           {
             model: Categories,
@@ -28,7 +41,7 @@ class booksController {
           },
           {
             model: Reviews,
-            attributes: ['id', 'rating'],
+            attributes: [],
           },
         ],
       });

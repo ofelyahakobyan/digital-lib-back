@@ -19,7 +19,7 @@ Files.init(
     },
     fileExtension: { type: DataTypes.STRING },
     fileSize: { type: DataTypes.INTEGER.UNSIGNED },
-    fileUrl: { type: DataTypes.STRING, unique: true },
+    fileUrl: { type: DataTypes.STRING, unique: 'fileUrl' },
   },
 
   {

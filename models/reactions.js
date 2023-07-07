@@ -26,8 +26,8 @@ Reactions.init(
   },
   {
     sequelize,
-    tableName: 'activities',
-    modelName: 'activities',
+    tableName: 'reactions',
+    modelName: 'reactions',
   },
 );
 

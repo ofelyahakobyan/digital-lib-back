@@ -12,6 +12,7 @@ import {
   UserBooks,
   CreditCards,
   Transactions,
+  TransactionDetails,
 } from '../models/index';
 
 const models = [
@@ -28,6 +29,7 @@ const models = [
   UserBooks,
   CreditCards,
   Transactions,
+  TransactionDetails,
 ];
 
 async function main() {
