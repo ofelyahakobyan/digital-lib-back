@@ -8,6 +8,10 @@ import {
   Reviews,
   Reactions,
   Files,
+  BookCategories,
+  UserBooks,
+  CreditCards,
+  Transactions,
 } from '../models/index';
 
 const models = [
@@ -20,6 +24,10 @@ const models = [
   Reviews,
   Reactions,
   Files,
+  BookCategories,
+  UserBooks,
+  CreditCards,
+  Transactions,
 ];
 
 async function main() {

@@ -7,3 +7,7 @@ export { default as Books } from './books';
 export { default as Reviews } from './reviews';
 export { default as Reactions } from './reactions';
 export { default as Files } from './files';
+export { default as BookCategories } from './bookCategories';
+export { default as UserBooks } from './userBooks';
+export { default as CreditCards } from './creditCards';
+export { default as Transactions } from './transactions';

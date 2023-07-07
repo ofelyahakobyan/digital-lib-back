@@ -1,6 +1,4 @@
-import { Books } from '../models/index';
-import Authors from '../models/authors';
-import Files from '../models/files';
+import { Books, Authors, Files, Categories, Reviews } from '../models/index';
 
 class booksController {
   static list = async (req, res, next) => {
@@ -13,6 +11,7 @@ class booksController {
       const books = await Books.findAll({
         limit,
         offset,
+        where: { $not: { status: 'unavailable' } },
         include: [
           {
             model: Authors,
@@ -22,8 +21,18 @@ class booksController {
             model: Files,
             attributes: { exclude: ['bookId', 'createdAt', 'updatedAt'] },
           },
+          {
+            model: Categories,
+            through: { attributes: [] },
+            attributes: { exclude: ['createdAt', 'updatedAt'] },
+          },
+          {
+            model: Reviews,
+            attributes: ['id', 'rating'],
+          },
         ],
       });
+
       res.status(200).json({
         code: res.statusCode,
         status: 'success',
