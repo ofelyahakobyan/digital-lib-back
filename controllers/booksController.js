@@ -13,16 +13,23 @@ class booksController {
         limit,
         offset,
         attributes: {
+          exclude: [
+            'status',
+            'createdAt',
+            'updatedAt',
+            'description',
+            'publisherId',
+          ],
           include: [
             [
               sequelize.literal(
-                '(Select  count(bookId)  from reviews where bookId=id)',
+                '(select count(bookId) from reviews where bookId=id)',
               ),
               'totalReviews',
             ],
             [
               sequelize.literal(
-                '(select  avg(rating)  as av  from reviews where bookId=id)',
+                '(select ceil(avg(rating)) from reviews where bookId=id)',
               ),
               'averageRating',
             ],

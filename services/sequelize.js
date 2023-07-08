@@ -12,5 +12,6 @@ const sequelize = new Sequelize(MYSQL_DATABASE, MYSQL_USER, MYSQL_PASSWORD, {
   port: MYSQL_PORT,
   dialect: 'mysql',
   operatorsAliases,
+  dialectOptions: { decimalNumbers: true },
 });
 export default sequelize;

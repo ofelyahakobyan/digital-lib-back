@@ -3,8 +3,7 @@ import sequelize from '../services/sequelize';
 import Authors from './authors';
 import Publishers from './publishers';
 
-class Books extends Model {
-}
+class Books extends Model {}
 
 Books.init(
   {
@@ -56,7 +55,6 @@ Books.init(
     sequelize,
     tableName: 'books',
     modelName: 'books',
-    paranoid: true,
   },
 );
 
