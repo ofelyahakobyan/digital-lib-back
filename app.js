@@ -4,7 +4,6 @@ import cookieParser from 'cookie-parser';
 import logger from 'morgan';
 import HttpError from 'http-errors';
 import passport from 'passport';
-import session from 'express-session';
 import indexRouter from './routes';
 import cors from './middlewares/cors';
 import authorization from './middlewares/authorization';
@@ -14,18 +13,9 @@ import facebookAuth from './middlewares/socialAuth';
 const app = express();
 
 const { BASE_URL } = process.env;
-app.use(cors);
 
-app.use(
-  session({
-    secret: 'keyboardcat',
-    resave: true,
-    saveUninitialized: true,
-  }),
-);
+app.use(cors);
 app.use(facebookAuth);
-app.use(passport.initialize());
-app.use(passport.session());
 app.use(adminAuthorization);
 app.use(authorization);
 app.use(logger('dev'));

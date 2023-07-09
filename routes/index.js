@@ -6,7 +6,7 @@ import books from './books';
 
 const router = express.Router();
 //  Social media authentication
-router.get('/user/login-facebook', passport.authenticate('facebook'));
+router.get('/user/login-facebook', passport.authenticate('facebook', { session: false }));
 // callback urls
 router.get('/user/facebook', passport.authenticate('facebook', { session: false }), (req, res) => res.send(req.user ? req.user : 'does not exists'));
 
