@@ -7,7 +7,7 @@ class Reviews extends Model {}
 
 Reviews.init(
   {
-    reviewId: {
+    id: {
       type: DataTypes.BIGINT.UNSIGNED,
       primaryKey: true,
       autoIncrement: true,

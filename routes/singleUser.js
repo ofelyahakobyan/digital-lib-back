@@ -5,7 +5,11 @@ import users from '../schemas/user';
 
 const router = express.Router();
 
-router.post('/signup', validate(users.registration), UsersController.registration);
+router.post(
+  '/signup',
+  validate(users.registration),
+  UsersController.registration,
+);
 router.post('/login', validate(users.login), UsersController.login);
 router.get('/profile', UsersController.getProfile);
 router.put('/edit-profile', UsersController.editProfile);
