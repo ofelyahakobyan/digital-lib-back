@@ -3,7 +3,6 @@ import path from 'path';
 import cookieParser from 'cookie-parser';
 import logger from 'morgan';
 import HttpError from 'http-errors';
-import passport from 'passport';
 import indexRouter from './routes';
 import cors from './middlewares/cors';
 import authorization from './middlewares/authorization';

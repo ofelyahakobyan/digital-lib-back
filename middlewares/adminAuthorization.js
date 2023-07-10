@@ -12,6 +12,7 @@ const EXCLUDE = [
   `GET:${BASE_URL}/books`,
   `GET:${BASE_URL}/user/login-facebook`,
   `GET:${BASE_URL}/user/facebook`,
+  `GET:${BASE_URL}/user/reviews`,
 ];
 
 const authorization = (req, res, next) => {

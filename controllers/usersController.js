@@ -2,7 +2,7 @@ import HttpError from 'http-errors';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidV4 } from 'uuid';
 import hash from '../helpers/hash';
-import { Users } from '../models/index';
+import { Books, Reviews, Users } from '../models';
 import Mail from '../services/mail';
 
 const { JWT_SECRET } = process.env;
@@ -12,6 +12,7 @@ class UsersController {
   static list = async (req, res, next) => {
     try {
       const { userID, isAdmin } = req;
+
       const user = await Users.findOne({ where: { id: userID, isAdmin } });
       if (!user || !user.isAdmin) {
         throw HttpError(401);
@@ -237,6 +238,32 @@ class UsersController {
     } catch (er) {
       next(er);
     }
+  };
+
+  static getReviews = async (req, res, next) => {
+    try {
+      const { userID } = req;
+      if (!userID) {
+        throw HttpError(401);
+      }
+      let { page = 1, limit = 2 } = req.query;
+      const where = { id: userID };
+      page = +page;
+      limit = +limit;
+      const offset = (page - 1) * limit;
+      const total = await Reviews.count({ where });
+      // TODO customize for design
+      const reviews = await Reviews.findAll({ limit, offset, where, include: { model: Books } });
+      res.status(200).json({
+        code: res.statusCode,
+        status: 'success',
+        currentPage: page,
+        totalPages: Math.ceil(total / limit),
+        limit,
+        total,
+        reviews,
+      });
+    } catch (er) { next(er); }
   };
 }
 

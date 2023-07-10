@@ -4,16 +4,15 @@ const users = {
   list: {
     query: Joi.object({
       page: Joi.number().integer().min(1).messages({
-        'number.integer': '{#key} must be an integer',
-        'number.max': '{#key} must be less than or equal to 20',
-        'number.min': '{#key} must be more than or equal to 1',
+        'number.integer': 'must be an integer',
+        'number.min': 'must be more than or equal to 1',
         'number.base': 'must be a number',
       }),
       limit: Joi.number().integer().min(1).max(20)
         .messages({
-          'number.integer': '{#key} must be an integer',
-          'number.max': '{#key} must be less than or equal to 20',
-          'number.min': '{#key} must be more than or equal to 1',
+          'number.integer': 'must be an integer',
+          'number.max': 'must be less than or equal to 20',
+          'number.min': 'must be more than or equal to 1',
           'number.base': 'must be a number',
         }),
     }),
@@ -49,6 +48,23 @@ const users = {
           'any.required': 'is required',
           'string.email': 'must be a valid email address',
           'string.empty': 'is not allowed to be empty',
+        }),
+    }),
+  },
+  reviews: {
+    query: Joi.object({
+      page: Joi.number().integer().min(1).messages({
+        'number.integer': 'must be an integer',
+        'number.max': 'must be less than or equal to 20',
+        'number.min': 'must be more than or equal to 1',
+        'number.base': 'must be a number',
+      }),
+      limit: Joi.number().integer().min(1).max(20)
+        .messages({
+          'number.integer': 'must be an integer',
+          'number.max': 'must be less than or equal to 20',
+          'number.min': 'must be more than or equal to 1',
+          'number.base': 'must be a number',
         }),
     }),
   },

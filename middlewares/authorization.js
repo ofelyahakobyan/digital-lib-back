@@ -12,6 +12,7 @@ const EXCLUDE = [
   `GET:${BASE_URL}/users`,
   `GET:${BASE_URL}/user/login-facebook`,
   `GET:${BASE_URL}/user/facebook`,
+  `POST:${BASE_URL}/admin/create-category`,
 ];
 
 const authorization = (req, res, next) => {

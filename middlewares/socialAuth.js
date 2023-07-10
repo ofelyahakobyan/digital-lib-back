@@ -12,12 +12,15 @@ const facebookAuth = (req, res, next) => {
           clientSecret: FACEBOOK_APP_SECRET,
           callbackURL: 'http://localhost:4000/api/v1/user/facebook',
           session: false,
+          profileFields: ['id', 'emails', 'displayName'],
         },
-        (accessToken, refreshToken, profile, cb) =>
+        (accessToken, refreshToken, profile, cb) => {
+          console.log(profile.id);
+          console.log('token', accessToken);
           // Here should be logic for creating a new user or finding one if it exists.
           // If the user is valid jwt token should be sent to the frontend.
-          cb(null, profile)
-        ,
+          return cb(null, profile);
+        },
       ),
     );
     passport.serializeUser((user, cb) => cb(null, user));
