@@ -2,7 +2,8 @@ import express from 'express';
 import users from './users';
 import singleUser from './singleUser';
 import books from './books';
-import admin from './admin';
+import categories from './categories';
+import authors from './authors';
 
 const router = express.Router();
 
@@ -10,7 +11,8 @@ const router = express.Router();
 router.use('/users', users);
 router.use('/user', singleUser);
 router.use('/books', books);
-router.use('/admin', admin);
+router.use('/categories', categories);
+router.use('/authors', authors);
 router.get('/', (req, res) => {
   res.json({
     status: 'success',

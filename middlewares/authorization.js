@@ -3,6 +3,7 @@ import HttpError from 'http-errors';
 
 const { JWT_SECRET, BASE_URL } = process.env;
 const EXCLUDE = [
+  // public
   `GET:${BASE_URL}`,
   `POST:${BASE_URL}/user/signup`,
   `POST:${BASE_URL}/user/login`,
@@ -12,7 +13,8 @@ const EXCLUDE = [
   `GET:${BASE_URL}/users`,
   `GET:${BASE_URL}/user/login-facebook`,
   `GET:${BASE_URL}/user/facebook`,
-  `POST:${BASE_URL}/admin/create-category`,
+  `GET:${BASE_URL}/categories`,
+  `GET:${BASE_URL}/authors`,
 ];
 
 const authorization = (req, res, next) => {

@@ -60,7 +60,7 @@ class booksController {
         totalPages: Math.ceil(total / limit),
         limit,
         total,
-        data: { books },
+        books,
       });
     } catch (er) {
       next(er);

@@ -13,7 +13,7 @@ router.post(
 );
 router.post('/login', validate(users.login), UsersController.login);
 router.get('/profile', UsersController.getProfile);
-router.put('/edit-profile', UsersController.editProfile);
+router.patch('/edit-profile', UsersController.editProfile);
 router.post('/forgot-password', UsersController.forgotPassword);
 router.post('/reset-password', UsersController.resetPassword);
 router.post('/change-password', UsersController.changePassword);

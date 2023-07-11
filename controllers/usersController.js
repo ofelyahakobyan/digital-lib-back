@@ -7,8 +7,8 @@ import Mail from '../services/mail';
 
 const { JWT_SECRET } = process.env;
 
-// const catchAsync = fn=>{ return (req, res, next)=>fn(req, res, next).catch(er=>next(er))};
 class UsersController {
+  // admin role is required
   static list = async (req, res, next) => {
     try {
       const { userID, isAdmin } = req;
@@ -40,6 +40,7 @@ class UsersController {
     }
   };
 
+  // public
   static registration = async (req, res, next) => {
     try {
       const { firstName, lastName = '', email, password } = req.body;
@@ -67,6 +68,7 @@ class UsersController {
     }
   };
 
+  // public
   static login = async (req, res, next) => {
     try {
       const { email, password } = req.body;
@@ -96,9 +98,10 @@ class UsersController {
     }
   };
 
+  // logged  user role is required
   static getProfile = async (req, res, next) => {
     try {
-      const { userID } = req.userID;
+      const { userID } = req;
       const user = await Users.findByPk(userID, { attributes: { exclude: ['password', 'isAdmin', 'isBlocked'] } });
       if (!user) {
         throw HttpError(422);
@@ -113,9 +116,10 @@ class UsersController {
     }
   };
 
+  // logged  user role is required
   static editProfile = async (req, res, next) => {
     try {
-      const { userID } = req.userID;
+      const { userID } = req;
       const {
         firstName,
         lastName,
@@ -149,6 +153,7 @@ class UsersController {
     }
   };
 
+  // logged  user role is required
   static forgotPassword = async (req, res, next) => {
     try {
       const { email } = req.body;
@@ -178,6 +183,7 @@ class UsersController {
     }
   };
 
+  // logged  user role is required
   static resetPassword = async (req, res, next) => {
     try {
       const { code, email, newPassword } = req.body;
@@ -207,6 +213,7 @@ class UsersController {
     }
   };
 
+  // logged  user role is required
   static changePassword = async (req, res, next) => {
     try {
       const { userID } = req;
@@ -240,6 +247,7 @@ class UsersController {
     }
   };
 
+  // logged  user role is required
   static getReviews = async (req, res, next) => {
     try {
       const { userID } = req;
