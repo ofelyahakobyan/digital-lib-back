@@ -42,7 +42,9 @@ class authorsController {
       const { file } = req;
       let avatar = '';
       if (file) {
-        const fileName = `author-${uuidv4()}_${file.originalname}`;
+        const ext = file.mimetype.split('/')[1];
+        const name = file.originalname.split('.')[0];
+        const fileName = `author-${uuidv4()}_${name}.${ext}`;
         avatar = path.join('images/authors', fileName);
         const fullPath = path.join(path.resolve(), 'public', 'api/v1', avatar);
         fs.writeFileSync(fullPath, file.buffer);
@@ -68,7 +70,6 @@ class authorsController {
         lastName,
         bio,
         dob,
-        avatar,
       } = req.body;
       const { file } = req;
       const { authorId } = req.params;
@@ -79,7 +80,9 @@ class authorsController {
 
       let newAvatar = '';
       if (file) {
-        const fileName = `author-${uuidv4()}_${file.originalname}`;
+        const ext = file.mimetype.split('/')[1];
+        const name = file.originalname.split('.')[0];
+        const fileName = `author-${uuidv4()}_${name}.${ext}`;
         newAvatar = path.join('images/authors', fileName);
         const fullPath = path.join(path.resolve(), 'public', 'api/v1', newAvatar);
         fs.writeFileSync(fullPath, file.buffer);
