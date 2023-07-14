@@ -17,13 +17,18 @@ const EXCLUDE = [
   `GET:${BASE_URL}/categories`,
   `GET:${BASE_URL}/authors`,
 ];
-
+const EXCLUDE_VAR = [`GET:${BASE_URL}/books/single`];
 const authorization = (req, res, next) => {
   try {
     if (req.isAdmin) {
       return next();
     }
     const { path, method } = req;
+    for (let i = 0; i < EXCLUDE_VAR.length; i += 1) {
+      if (`${method}:${path}`.startsWith(EXCLUDE_VAR[i])) {
+        return next();
+      }
+    }
     if (EXCLUDE.includes(`${method}:${path}`)) {
       return next();
     }

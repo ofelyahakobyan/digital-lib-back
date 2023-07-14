@@ -30,6 +30,7 @@ const models = [
   CreditCards,
   Transactions,
   TransactionDetails,
+
 ];
 
 async function main() {

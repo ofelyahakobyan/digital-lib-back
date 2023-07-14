@@ -19,7 +19,7 @@ Reviews.init(
     },
     userId: { type: DataTypes.BIGINT.UNSIGNED, unique: 'compositeIndex' },
     title: { type: DataTypes.STRING },
-    text: { type: DataTypes.TEXT },
+    content: { type: DataTypes.TEXT },
     rating: { type: DataTypes.TINYINT.UNSIGNED },
   },
   {

@@ -48,6 +48,11 @@ Books.init(
       allowNull: false,
       defaultValue: false,
     },
+    bestseller: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+    },
     authorId: { type: DataTypes.INTEGER.UNSIGNED },
     publisherId: { type: DataTypes.INTEGER.UNSIGNED },
   },

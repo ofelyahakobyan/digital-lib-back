@@ -5,5 +5,6 @@ import books from '../schemas/books';
 
 const router = express.Router();
 
-router.get('/', validate(books.list), booksController.list);
+router.get('/', booksController.list);
+router.get('/single/:bookId', booksController.single);
 export default router;

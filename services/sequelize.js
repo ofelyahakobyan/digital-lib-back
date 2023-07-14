@@ -5,6 +5,9 @@ const operatorsAliases = {
   $and: Op.and,
   $or: Op.or,
   $not: Op.not,
+  $gte: Op.gte,
+  $lte: Op.lte,
+  $eq: Op.eq,
 };
 
 const sequelize = new Sequelize(MYSQL_DATABASE, MYSQL_USER, MYSQL_PASSWORD, {

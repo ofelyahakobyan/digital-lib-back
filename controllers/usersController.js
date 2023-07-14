@@ -273,6 +273,7 @@ class UsersController {
       });
     } catch (er) { next(er); }
   };
+  //
 }
 
 export default UsersController;
