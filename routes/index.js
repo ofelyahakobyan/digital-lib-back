@@ -5,6 +5,7 @@ import books from './books';
 import categories from './categories';
 import authors from './authors';
 import reviews from './reviews';
+import publishers from './publishers';
 
 const router = express.Router();
 
@@ -14,6 +15,7 @@ router.use('/user', singleUser);
 router.use('/books', books);
 router.use('/categories', categories);
 router.use('/authors', authors);
+router.use('/publishers', publishers);
 router.use('/reviews', reviews);
 router.get('/', (req, res) => {
   res.json({
