@@ -1,6 +1,7 @@
 import HttpError from 'http-errors';
 import { Authors, Books, Reviews, UserBooks, Users } from '../models';
 import sequelize from '../services/sequelize';
+import userBooks from '../models/userBooks.js';
 
 class UserBooksController {
   static wishlist = async (req, res, next) => {
@@ -10,7 +11,8 @@ class UserBooksController {
       page = +page;
       limit = +limit;
       const offset = (page - 1) * limit;
-      const total = await UserBooks.count({ where: { $and: [{ userId: userID }, { status: 'wish' }] } });
+      const where = { userId: userID, status: 'wish' };
+      const total = await UserBooks.count({ where });
       const items = await Books.findAll(
         {
           page,
@@ -39,7 +41,7 @@ class UserBooksController {
               model: Users,
               where: { id: userID },
               attributes: [],
-              through: { model: UserBooks },
+              through: { model: UserBooks, where: { status: 'wish' } },
               as: 'users',
             },
             { model: Authors, as: 'author', attributes: { exclude: ['createdAt', 'updatedAt', 'dob', 'bio'] } },
@@ -65,12 +67,16 @@ class UserBooksController {
     try {
       const { userID } = req;
       const { bookId } = req.params;
-      const exists = await Books.findByPk(bookId);
-      if (!exists) {
-        console.log('not exists');
+      const where = { userId: userID, bookId, status: 'wish' };
+      const bookExists = await Books.findByPk(bookId);
+      if (!bookExists) {
         throw HttpError(404);
       }
-      const item = await UserBooks.create({ userId: userID, bookId: +bookId, status: 'wish' });
+      const itemExists = await UserBooks.findOne({ where });
+      if (itemExists) {
+        throw HttpError(409, 'item already on the wishlist');
+      }
+      const item = await UserBooks.create(where);
       if (!item) {
         throw HttpError(400);
       }
@@ -84,6 +90,22 @@ class UserBooksController {
     }
   };
 
+  static wishlistDelete = async (req, res, next) => {
+    try {
+      const { userID } = req;
+      const { bookId } = req.params;
+      const where = { userId: userID, bookId, status: 'wish' };
+      const item = await UserBooks.findOne({ where });
+      if (!item) {
+        throw HttpError(404);
+      }
+      await item.destroy();
+      res.status(204).json({ status: 'success' });
+    } catch (er) {
+      next(er);
+    }
+  };
+
   static cart = async (req, res, next) => {
     try {
       const { userID } = req;
@@ -91,7 +113,8 @@ class UserBooksController {
       page = +page;
       limit = +limit;
       const offset = (page - 1) * limit;
-      const total = await UserBooks.count({ where: { $and: [{ userId: userID }, { status: 'cart' }] } });
+      const where = { userId: userID, status: 'cart' };
+      const total = await UserBooks.count({ where });
       const items = await Books.findAll(
         {
           page,
@@ -120,7 +143,7 @@ class UserBooksController {
               model: Users,
               where: { id: userID },
               attributes: [],
-              through: { model: UserBooks },
+              through: { model: UserBooks, where: { status: 'cart' } },
               as: 'users',
             },
             { model: Authors, as: 'author', attributes: { exclude: ['createdAt', 'updatedAt', 'dob', 'bio'] } },
@@ -146,11 +169,22 @@ class UserBooksController {
     try {
       const { userID } = req;
       const { bookId } = req.params;
-      const exists = await Books.findByPk(bookId);
-      if (!exists) {
+      const where = { userId: userID, bookId, status: 'cart' };
+      const bookExists = await Books.findByPk(bookId);
+      if (!bookExists) {
         throw HttpError(404);
       }
-      const item = await UserBooks.create({ userId: userID, bookId: +bookId, status: 'cart' });
+      const itemExists = await UserBooks.findOne({ where });
+      if (itemExists) {
+        throw HttpError(409, 'item already on the cart');
+      }
+      const itemOnTheWishList = await userBooks.findOne({ ...where, status: 'wish' });
+      console.log(itemOnTheWishList);
+      if (itemOnTheWishList) {
+        itemOnTheWishList.status = 'cart';
+        await itemOnTheWishList.save();
+      }
+      const item = await UserBooks.create(where);
       if (!item) {
         throw HttpError(400);
       }
@@ -159,6 +193,22 @@ class UserBooksController {
         status: 'success',
         item,
       });
+    } catch (er) {
+      next(er);
+    }
+  };
+
+  static cartDelete = async (req, res, next) => {
+    try {
+      const { userID } = req;
+      const { bookId } = req.params;
+      const where = { userId: userID, bookId, status: 'cart' };
+      const item = await UserBooks.findOne({ where });
+      if (!item) {
+        throw HttpError(404);
+      }
+      await item.destroy();
+      res.status(204).json({ status: 'success' });
     } catch (er) {
       next(er);
     }

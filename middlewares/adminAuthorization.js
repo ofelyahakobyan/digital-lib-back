@@ -26,8 +26,10 @@ const EXCLUDE = [
 const EXCLUDE_VAR = [
   `GET:${BASE_URL}/books/single`,
   `POST:${BASE_URL}/reviews/create`,
-  `POST:${BASE_URL}/user/wishlist/add}`,
-  `POST:${BASE_URL}/user/cart/add}`,
+  `POST:${BASE_URL}/user/wishlist}`,
+  `POST:${BASE_URL}/user/cart}`,
+  `DELETE:${BASE_URL}/user/wishlist}`,
+  `DELETE:${BASE_URL}/user/cart}`,
 ];
 const authorization = (req, res, next) => {
   try {

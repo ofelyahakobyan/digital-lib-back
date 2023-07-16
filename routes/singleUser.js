@@ -26,9 +26,11 @@ router.get('/facebook', passport.authenticate('facebook', { session: false }), (
 
 // user Books
 router.get('/wishlist', UserBooksController.wishlist);
-router.post('/wishlist/add/:bookId', UserBooksController.wishlistAdd);
+router.post('/wishlist/:bookId', UserBooksController.wishlistAdd);
+router.delete('/wishlist/:bookId', UserBooksController.wishlistDelete);
 
 router.get('/cart', UserBooksController.cart);
-router.post('/cart/add/:bookId', UserBooksController.cartAdd);
+router.post('/cart/:bookId', UserBooksController.cartAdd);
+router.delete('/cart/:bookId', UserBooksController.cartDelete);
 
 export default router;
