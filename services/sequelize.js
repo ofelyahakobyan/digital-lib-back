@@ -8,6 +8,9 @@ const operatorsAliases = {
   $gte: Op.gte,
   $lte: Op.lte,
   $eq: Op.eq,
+  $like: Op.like,
+  $in: Op.in,
+  $contains: Op.contains,
 };
 
 const sequelize = new Sequelize(MYSQL_DATABASE, MYSQL_USER, MYSQL_PASSWORD, {

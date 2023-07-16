@@ -8,10 +8,13 @@ const EXCLUDE = [
   `GET:${BASE_URL}/`,
   `POST:${BASE_URL}/user/signup`,
   `POST:${BASE_URL}/user/login`,
+  `GET:${BASE_URL}/user/wishlist`,
+  `GET:${BASE_URL}/user/cart`,
   `POST:${BASE_URL}/user/forgot-password`,
   `POST:${BASE_URL}/user/reset-password`,
   `GET:${BASE_URL}/user/profile`,
   `GET:${BASE_URL}/books`,
+  `GET:${BASE_URL}/books/search`,
   `GET:${BASE_URL}/user/login-facebook`,
   `GET:${BASE_URL}/user/facebook`,
   `GET:${BASE_URL}/user/reviews`,
@@ -20,7 +23,12 @@ const EXCLUDE = [
   `GET:${BASE_URL}/authors`,
 ];
 
-const EXCLUDE_VAR = [`GET:${BASE_URL}/books/single`, `POST:${BASE_URL}/reviews/create`];
+const EXCLUDE_VAR = [
+  `GET:${BASE_URL}/books/single`,
+  `POST:${BASE_URL}/reviews/create`,
+  `POST:${BASE_URL}/user/wishlist/add}`,
+  `POST:${BASE_URL}/user/cart/add}`,
+];
 const authorization = (req, res, next) => {
   try {
     const { path, method } = req;

@@ -17,13 +17,11 @@ UserBooks.init(
       type: DataTypes.BIGINT.UNSIGNED,
       allowNull: false,
       reference: { model: Users, key: 'id' },
-      unique: 'compositeIndex',
     },
     bookId: {
       type: DataTypes.BIGINT.UNSIGNED,
       allowNull: false,
       reference: { model: Books, key: 'id' },
-      unique: 'compositeIndex',
     },
     status: {
       type: DataTypes.ENUM('wish', 'cart', 'paid', 'paymentPending'),
@@ -40,6 +38,6 @@ UserBooks.init(
   },
 );
 
-Books.belongsToMany(Users, { through: { model: UserBooks, unique: false } });
-Users.belongsToMany(Books, { through: { model: UserBooks, unique: false } });
+Books.belongsToMany(Users, { through: { model: UserBooks, unique: false, as: 'users' } });
+Users.belongsToMany(Books, { through: { model: UserBooks, unique: false, as: 'books' } });
 export default UserBooks;

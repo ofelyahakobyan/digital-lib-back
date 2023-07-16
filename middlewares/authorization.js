@@ -11,6 +11,7 @@ const EXCLUDE = [
   `POST:${BASE_URL}/user/forgot-password`,
   `POST:${BASE_URL}/user/reset-password`,
   `GET:${BASE_URL}/books`,
+  `GET:${BASE_URL}/books/search`,
   `GET:${BASE_URL}/users`,
   `GET:${BASE_URL}/user/login-facebook`,
   `GET:${BASE_URL}/user/facebook`,

@@ -63,8 +63,8 @@ Books.init(
   },
 );
 
-Books.belongsTo(Authors, { foreignKey: 'authorId' });
-Authors.hasMany(Books, { foreignKey: 'authorId' });
+Books.belongsTo(Authors, { foreignKey: 'authorId', as: 'author' });
+Authors.hasMany(Books, { foreignKey: 'authorId', as: 'books' });
 
 Books.belongsTo(Publishers, { foreignKey: 'publisherId' });
 Publishers.hasMany(Books, { foreignKey: 'publisherId' });
