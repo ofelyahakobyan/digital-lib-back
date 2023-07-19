@@ -2,7 +2,7 @@ import HttpError from 'http-errors';
 import { Books, Authors, Categories, Reviews, BookCategories } from '../models';
 import sequelize from '../services/sequelize';
 
-class booksController {
+class BooksController {
   // public
   static list = async (req, res, next) => {
     try {
@@ -171,7 +171,71 @@ class booksController {
     }
   };
 
+  // TODO admin should be able to edit books
   // TODO here should  be book upload API
+  // OFELYA'S VERSION
+
+  static add = async (req, res, next) => {
+    try {
+      const {
+        title,
+        price,
+        description = '',
+        language,
+        authorId,
+        categories,
+        brandNew = false,
+        popular = false,
+        bestseller = false,
+      } = req.body;
+      const bookData = {
+        title,
+        price,
+        description,
+        language,
+        authorId,
+        new: brandNew,
+        popular,
+        bestseller,
+        audio: false,
+        publisherId: null,
+        status: 'unavailable',
+        coverImg: 'default',
+      };
+      if (!categories || !categories[0] || !categories.length) {
+        throw HttpError(400, 'at least one category should be provided');
+      }
+      // categories should be validated as an array from JOI
+      const newBook = await Books.build(bookData);
+      if (!newBook) {
+        throw HttpError(400, 'unable to create book');
+      }
+      const existingCategories = await Categories.findAll({ where: { id: { $in: categories } } });
+      if (!existingCategories.length) {
+        throw HttpError(400, 'invalid categories are provided');
+      }
+      const bookAlreadyHasCategory = await BookCategories.findOne({
+        where: {
+          bookId: newBook.id,
+          categoryId: { $in: categories },
+        },
+      });
+      if (bookAlreadyHasCategory) {
+        throw HttpError(422, 'book already has the provided category');
+      }
+      await newBook.save();
+      await Promise.all(existingCategories.map(async (cat) => {
+        await BookCategories.create({ bookId: newBook.id, categoryId: cat.id });
+      }));
+      res.status(201).json({
+        code: res.statusCode,
+        status: 'success',
+        newBook,
+      });
+    } catch (er) {
+      next(er);
+    }
+  };
 }
 
-export default booksController;
+export default BooksController;

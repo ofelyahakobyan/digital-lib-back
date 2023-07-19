@@ -18,7 +18,6 @@ router.patch('/edit-profile', UsersController.editProfile);
 router.post('/forgot-password', UsersController.forgotPassword);
 router.post('/reset-password', UsersController.resetPassword);
 router.post('/change-password', UsersController.changePassword);
-router.get('/reviews', validate(users.reviews), UsersController.getReviews);
 //  Social media authentication
 router.get('/login-facebook', passport.authenticate('facebook', { session: false }));
 // callback url
