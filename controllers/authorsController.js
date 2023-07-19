@@ -2,7 +2,8 @@ import fs from 'fs';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import HttpError from 'http-errors';
-import { Authors } from '../models';
+import { Authors, Books } from '../models';
+import sequelize from '../services/sequelize';
 
 class authorsController {
   // public
@@ -14,9 +15,24 @@ class authorsController {
       const offset = (page - 1) * limit;
       const total = await Authors.count();
       const authors = await Authors.findAll({
+        include: [
+          {
+            model: Books,
+            as: 'books',
+            attributes: [],
+          },
+        ],
         limit,
         offset,
-        attributes: { exclude: ['createdAt', 'updatedAt'] },
+        attributes: {
+          include: [[
+            sequelize.literal(
+              '(select count(*) from books group by authorId having authorId=id)',
+            ),
+            'totalBooks',
+          ]],
+          exclude: ['createdAt', 'updatedAt'],
+        },
       });
       res.status(200).json({
         code: res.statusCode,

@@ -2,7 +2,7 @@ import HttpError from 'http-errors';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidV4 } from 'uuid';
 import hash from '../helpers/hash';
-import { Books, Reviews, Users } from '../models';
+import { Users } from '../models';
 import Mail from '../services/mail';
 
 const { JWT_SECRET } = process.env;
@@ -246,34 +246,6 @@ class UsersController {
       next(er);
     }
   };
-
-  // logged  user role is required
-  static getReviews = async (req, res, next) => {
-    try {
-      const { userID } = req;
-      if (!userID) {
-        throw HttpError(401);
-      }
-      let { page = 1, limit = 2 } = req.query;
-      const where = { id: userID };
-      page = +page;
-      limit = +limit;
-      const offset = (page - 1) * limit;
-      const total = await Reviews.count({ where });
-      // TODO customize for design
-      const reviews = await Reviews.findAll({ limit, offset, where, include: { model: Books } });
-      res.status(200).json({
-        code: res.statusCode,
-        status: 'success',
-        currentPage: page,
-        totalPages: Math.ceil(total / limit),
-        limit,
-        total,
-        reviews,
-      });
-    } catch (er) { next(er); }
-  };
-  //
 }
 
 export default UsersController;

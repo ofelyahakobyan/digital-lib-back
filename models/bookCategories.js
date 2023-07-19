@@ -25,6 +25,7 @@ BookCategories.init(
     timestamps: false,
   },
 );
-Books.belongsToMany(Categories, { through: BookCategories, as: 'categories' });
-Categories.belongsToMany(Books, { through: BookCategories, as: 'books' });
+
+Books.belongsToMany(Categories, { through: BookCategories, as: 'categories', foreignKey: 'bookId' });
+Categories.belongsToMany(Books, { through: BookCategories, as: 'books', foreignKey: 'categoryId' });
 export default BookCategories;
