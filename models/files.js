@@ -13,7 +13,7 @@ Files.init(
     },
     bookId: { type: DataTypes.BIGINT.UNSIGNED, allowNull: false },
     fileType: {
-      type: DataTypes.ENUM('text', 'audio', 'other'),
+      type: DataTypes.ENUM('text', 'audio', 'image'),
       allowNull: false,
       defaultValue: 'text',
     },

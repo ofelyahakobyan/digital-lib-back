@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import HttpError from 'http-errors';
+import sharp from 'sharp';
 import { Authors, Books } from '../models';
 import sequelize from '../services/sequelize';
 
@@ -57,16 +58,23 @@ class authorsController {
       }
       const { file } = req;
       let avatar = '';
+      let avatarSmall = '';
       if (file) {
-        const ext = file.mimetype.split('/')[1];
         const name = file.originalname.split('.')[0];
-        const fileName = `author-${uuidv4()}_${name}.${ext}`;
+        const fileName = `author-${uuidv4()}_${name}.jpg`;
+        // multer resizer
         avatar = path.join('images/authors', fileName);
+        avatarSmall = path.join('images/authors', `small-${fileName}`);
         const fullPath = path.join(path.resolve(), 'public', 'api/v1', avatar);
-        fs.writeFileSync(fullPath, file.buffer);
+        const fullPathSmall = path.join(path.resolve(), 'public', 'api/v1', avatarSmall);
+        await sharp(file.buffer).resize(285, 425).rotate().jpeg({ quality: 90, mozjpeg: true })
+          .toFile(fullPath);
+        await sharp(file.buffer).resize(285, 390).rotate().jpeg({ quality: 90, mozjpeg: true })
+          .toFile(fullPathSmall);
+        // fs.writeFileSync(fullPath, file.buffer);
       }
       // JOI validation
-      const author = await Authors.create({ firstName, lastName, bio, dob, avatar });
+      const author = await Authors.create({ firstName, lastName, bio, dob, avatar, avatarSmall });
       res.status(200).json({
         code: res.statusCode,
         status: 'success',

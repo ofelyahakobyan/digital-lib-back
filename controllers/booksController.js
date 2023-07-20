@@ -1,6 +1,9 @@
 import HttpError from 'http-errors';
-import { Books, Authors, Categories, Reviews, BookCategories } from '../models';
+import { v4 as uuidv4 } from 'uuid';
+import path from 'path';
+import sharp from 'sharp';
 import sequelize from '../services/sequelize';
+import { Books, Authors, Categories, Reviews, BookCategories, BookFiles } from '../models';
 
 class BooksController {
   // public
@@ -73,6 +76,7 @@ class BooksController {
             'updatedAt',
             'description',
             'publisherId',
+            'coverImage',
           ],
           include: [
             [
@@ -111,6 +115,11 @@ class BooksController {
             as: 'reviews',
             where: rating ? sequelize.where(sequelize.literal('(select ceil(avg(rating)) from reviews group by bookId having bookId=books.id )'), { $eq: rating }) : {},
             required: !!rating,
+          },
+          {
+            model: BookFiles,
+            as: 'bookFiles',
+            attributes: { exclude: ['createdAt', 'updatedAt'] },
           },
         ],
       });
@@ -188,6 +197,11 @@ class BooksController {
         popular = false,
         bestseller = false,
       } = req.body;
+      const { file } = req;
+      let coverXS = '';
+      let coverS = '';
+      let coverM = '';
+      let coverL = '';
       const bookData = {
         title,
         price,
@@ -200,7 +214,7 @@ class BooksController {
         audio: false,
         publisherId: null,
         status: 'unavailable',
-        coverImg: 'default',
+        coverImage: coverM || 'default',
       };
       if (!categories || !categories[0] || !categories.length) {
         throw HttpError(400, 'at least one category should be provided');
@@ -224,6 +238,64 @@ class BooksController {
         throw HttpError(422, 'book already has the provided category');
       }
       await newBook.save();
+      if (file) {
+        const name = file.originalname.split('.')[0];
+        const fileName = `book-${uuidv4()}_${name}.jpg`;
+        // multer resizer
+        coverXS = path.join('images/covers', `extra-small-${fileName}`);
+        coverS = path.join('images/covers', `small-${fileName}`);
+        coverM = path.join('images/covers', `medium-${fileName}`);
+        coverL = path.join('images/covers', `large-${fileName}`);
+        const fullPath = path.join(path.resolve(), 'public', 'api/v1');
+        await sharp(file.buffer)
+          .resize({ width: 110 })
+          .rotate()
+          .jpeg({
+            quality: 90,
+            mozjpeg: true,
+          })
+          .toFile(`${fullPath}/${coverXS}`);
+
+        await sharp(file.buffer)
+          .resize({ width: 160 })
+          .rotate()
+          .jpeg({
+            quality: 90,
+            mozjpeg: true,
+          })
+          .toFile(`${fullPath}/${coverS}`);
+
+        await sharp(file.buffer)
+          .resize({ width: 285 })
+          .rotate()
+          .jpeg({
+            quality: 90,
+            mozjpeg: true,
+          })
+          .toFile(`${fullPath}/${coverM}`);
+
+        await sharp(file.buffer)
+          .resize({
+            width: 387,
+            fit: 'contain',
+          })
+          .rotate()
+          .jpeg({
+            quality: 90,
+            mozjpeg: true,
+          })
+          .trim()
+          .toFile(`${fullPath}/${coverL}`);
+
+        await BookFiles.create({
+          bookId: newBook.id,
+          coverXS,
+          coverS,
+          coverM,
+          coverL,
+        });
+      }
+
       await Promise.all(existingCategories.map(async (cat) => {
         await BookCategories.create({ bookId: newBook.id, categoryId: cat.id });
       }));

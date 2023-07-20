@@ -14,8 +14,8 @@ const app = express();
 const { BASE_URL } = process.env;
 
 app.use(cors);
-app.use(adminAuthorization);
-app.use(authorization);
+// app.use(adminAuthorization);
+// app.use(authorization);
 app.use(facebookAuth);
 app.use(logger('dev'));
 app.use(express.json());

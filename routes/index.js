@@ -18,6 +18,7 @@ router.use('/authors', authors);
 router.use('/publishers', publishers);
 router.use('/reviews', reviews);
 router.get('/', (req, res) => {
+  console.log(req.cookies);
   res.json({
     status: 'success',
     title: 'digital library',

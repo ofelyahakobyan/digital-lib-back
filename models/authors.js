@@ -15,6 +15,7 @@ Authors.init(
     bio: { type: DataTypes.TEXT },
     dob: { type: DataTypes.DATE },
     avatar: { type: DataTypes.STRING },
+    avatarSmall: { type: DataTypes.STRING },
     fullName: {
       type: DataTypes.VIRTUAL,
       get() {
