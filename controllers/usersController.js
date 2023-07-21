@@ -1,6 +1,8 @@
 import HttpError from 'http-errors';
 import jwt from 'jsonwebtoken';
-import { v4 as uuidV4 } from 'uuid';
+import { v4 as uuidv4 } from 'uuid';
+import path from 'path';
+import sharp from 'sharp';
 import hash from '../helpers/hash';
 import { Users } from '../models';
 import Mail from '../services/mail';
@@ -44,12 +46,9 @@ class UsersController {
   static registration = async (req, res, next) => {
     try {
       const { firstName, lastName = '', email, password } = req.body;
-      const existingUser = await Users.findOne({
-        attributes: ['id'],
-        where: { email },
-      });
+      const existingUser = await Users.findOne({ where: { email } });
       if (existingUser) {
-        throw HttpError(409, { error: { email: 'already registered' } });
+        throw HttpError(409, 'user with this email already registered');
       }
       const user = await Users.create({
         firstName,
@@ -57,11 +56,18 @@ class UsersController {
         lastName,
         password,
       });
+      const newUser = {
+        id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        registrationDate: user.createdAt,
+      };
       res.status(201).json({
         code: res.statusCode,
         status: 'success',
         message: 'new user was successfully registered',
-        user,
+        user: newUser,
       });
     } catch (er) {
       next(er);
@@ -79,7 +85,7 @@ class UsersController {
         },
       });
       if (!user) {
-        throw HttpError(404, 'incorrect username or password');
+        throw HttpError(404, 'invalid username or password');
       }
       const token = jwt.sign(
         { userID: user.id, isAdmin: user.isAdmin },
@@ -98,13 +104,13 @@ class UsersController {
     }
   };
 
-  // logged  user role is required
+  // logged-in  user role is required
   static getProfile = async (req, res, next) => {
     try {
       const { userID } = req;
       const user = await Users.findByPk(userID, { attributes: { exclude: ['password', 'isAdmin', 'isBlocked'] } });
       if (!user) {
-        throw HttpError(422);
+        throw HttpError(404, 'the provided userId is invalid');
       }
       res.status(200).json({
         code: res.statusCode,
@@ -116,32 +122,42 @@ class UsersController {
     }
   };
 
-  // logged  user role is required
+  // logged-in  user role is required
   static editProfile = async (req, res, next) => {
     try {
       const { userID } = req;
+      const user = await Users.findByPk(userID, { attributes: { exclude: ['isAdmin', 'isBlocked'] } });
+      if (!user) {
+        throw HttpError(404, 'the provided userId is invalid');
+      }
       const {
         firstName,
         lastName,
-        email,
         phone,
         nikName,
         country,
         dob,
         shortAbout,
       } = req.body;
-      const user = await Users.findByPk(userID);
-      if (!user) {
-        throw HttpError(422);
+      const { file } = req;
+      let avatar = '';
+      if (file) {
+        const name = file.originalname.split('.')[0];
+        const fileName = `user-${userID}-${uuidv4()}_${name}.jpg`;
+        // multer resizer
+        avatar = path.join('images/users', fileName);
+        const fullPath = path.join(path.resolve(), 'public', 'api/v1', avatar);
+        await sharp(file.buffer).resize(86, 86).rotate().jpeg({ quality: 90, mozjpeg: true })
+          .toFile(fullPath);
       }
       user.firstName = firstName || user.firstName;
       user.lastName = lastName || user.lastName;
-      user.email = email || user.email;
       user.phone = phone || user.phone;
       user.nikName = nikName || user.nikName;
       user.country = country || user.country;
       user.dob = dob || user.dob;
       user.shortAbout = shortAbout || user.shortAbout;
+      user.avatar = avatar || user.avatar;
       await user.save();
       res.status(201).json({
         code: res.statusCode,
@@ -153,18 +169,15 @@ class UsersController {
     }
   };
 
-  // logged  user role is required
+  // public
   static forgotPassword = async (req, res, next) => {
     try {
       const { email } = req.body;
       const user = await Users.findOne({ where: { email } });
       if (!user) {
-        throw HttpError(
-          404,
-          'user with provided email address does not exists',
-        );
+        throw HttpError(404, 'user with provided email does not exist');
       }
-      const verificationCode = uuidV4();
+      const verificationCode = uuidv4();
       user.verificationCode = verificationCode;
       await user.save();
       Mail.send(email, 'Reset Password', 'resetPassword', {
@@ -183,11 +196,11 @@ class UsersController {
     }
   };
 
-  // logged  user role is required
+  // public
   static resetPassword = async (req, res, next) => {
     try {
       const { code, email, newPassword } = req.body;
-      if (!code || !email) {
+      if (!code) {
         throw HttpError(400);
       }
       const user = await Users.findOne({
@@ -195,9 +208,10 @@ class UsersController {
           email,
           verificationCode: code,
         },
+        attributes: { exclude: ['isBlocked', 'isAdmin'] },
       });
       if (!user) {
-        throw HttpError(403, 'provided  verification code is invalid');
+        throw HttpError(404, 'User is not found or invalid verification code.');
       }
       user.password = newPassword;
       user.verificationCode = '';
@@ -213,26 +227,20 @@ class UsersController {
     }
   };
 
-  // logged  user role is required
+  // logged-in  user role is required
   static changePassword = async (req, res, next) => {
     try {
       const { userID } = req;
       const { currentPassword, newPassword } = req.body;
-      if (!userID) {
-        throw HttpError(401);
-      }
-      if (!currentPassword || !newPassword) {
-        throw HttpError(400);
-      }
       const user = await Users.findOne({
         where: {
           id: userID,
           password: hash(currentPassword),
         },
+        attributes: { exclude: ['isBlocked', 'isAdmin'] },
       });
-
       if (!user) {
-        throw HttpError(404, 'user is not registered');
+        throw HttpError(401, 'user is not registered');
       }
       user.password = newPassword;
       await user.save();

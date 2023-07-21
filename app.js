@@ -8,14 +8,16 @@ import cors from './middlewares/cors';
 import authorization from './middlewares/authorization';
 import adminAuthorization from './middlewares/adminAuthorization';
 import facebookAuth from './middlewares/socialAuth';
+import publicRoutesParser from './middlewares/publicRoutesParser';
 
 const app = express();
 
 const { BASE_URL } = process.env;
 
 app.use(cors);
-// app.use(adminAuthorization);
-// app.use(authorization);
+app.use(publicRoutesParser);
+app.use(adminAuthorization);
+app.use(authorization);
 app.use(facebookAuth);
 app.use(logger('dev'));
 app.use(express.json());

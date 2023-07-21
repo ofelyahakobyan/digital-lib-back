@@ -25,31 +25,48 @@ const users = {
   },
   registration: {
     body: Joi.object({
-      firstName: Joi.string().alphanum().label('first name').required()
-        .messages({
-          'any.required': 'is required',
-          'string.alphanum': 'may contain only letters or numbers',
-          'string.empty': 'is not allowed to be empty',
-        }),
-      lastName: Joi.string().alphanum().label('last name')
-        .messages({
-          'string.alphanum': 'may contain only letters or numbers',
-          'string.empty': 'is not allowed to be empty',
-        }),
-      password: Joi.string().min(4).label('password').required()
-        .messages({
-          'any.required': 'is required',
-          'string.min': 'should contain at least 4 characters',
-          'string.empty': 'is not allowed to be empty',
-        }),
+      firstName: Joi.string().trim(true).alphanum().min(3)
+        .max(100)
+        .required(),
+      lastName: Joi.string().trim().alphanum().min(3)
+        .max(100),
+      password: Joi.string().min(4).required(),
       email: Joi.string().email().lowercase().trim()
-        .required()
-        .messages({
-          'any.required': 'is required',
-          'string.email': 'must be a valid email address',
-          'string.empty': 'is not allowed to be empty',
-        }),
+        .required(),
     }),
+  },
+  edit: {
+    body: Joi.object({
+      firstName: Joi.string().trim().alphanum().min(3)
+        .max(100),
+      lastName: Joi.string().trim().alphanum().min(3)
+        .max(100),
+      nikName: Joi.string().trim().alphanum(),
+      country: Joi.string().trim().pattern(/^[A-Za-z]+$/),
+      dob: Joi.date(),
+      shortAbout: Joi.string().trim().alphanum().min(3),
+      phone: Joi.string().pattern(/^[0-9\s]+$/),
+    }),
+  },
+  changePassword: {
+    body: {
+      currentPassword: Joi.string().min(4).required(),
+      newPassword: Joi.string().min(4).required(),
+    },
+  },
+  passwordForgot: {
+    body: {
+      email: Joi.string().email().lowercase().trim()
+        .required(),
+    },
+  },
+  passwordReset: {
+    body: {
+      email: Joi.string().email().lowercase().trim()
+        .required(),
+      newPassword: Joi.string().trim().min(4).required(),
+      code: Joi.string(),
+    },
   },
   reviews: {
     query: Joi.object({

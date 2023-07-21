@@ -3,13 +3,6 @@ import HttpError from 'http-errors';
 
 const { JWT_SECRET, BASE_URL } = process.env;
 const EXCLUDE = [
-  // public
-  `GET:${BASE_URL}`,
-  `GET:${BASE_URL}/`,
-  `POST:${BASE_URL}/user/signup`,
-  `POST:${BASE_URL}/user/login`,
-  `POST:${BASE_URL}/user/forgot-password`,
-  `POST:${BASE_URL}/user/reset-password`,
   `GET:${BASE_URL}/books`,
   `GET:${BASE_URL}/books/search`,
   `GET:${BASE_URL}/users`,
@@ -21,6 +14,9 @@ const EXCLUDE = [
 const EXCLUDE_VAR = [`GET:${BASE_URL}/books/single`];
 const authorization = (req, res, next) => {
   try {
+    if (req.public) {
+      return next();
+    }
     if (req.isAdmin) {
       return next();
     }
@@ -34,7 +30,10 @@ const authorization = (req, res, next) => {
       return next();
     }
     const { authorization = '' } = req.headers;
-    const { userID } = jwt.verify(authorization, JWT_SECRET);
+    if (!authorization) {
+      throw HttpError(401, 'unauthorized user');
+    }
+    const { userID } = jwt.verify(authorization.replace('Bearer ', ''), JWT_SECRET);
     // jwt verification failed
     // customize error
     if (!userID) {

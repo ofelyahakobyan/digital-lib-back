@@ -7,12 +7,13 @@ const validate = (schema) => (req, res, next) => {
     const { value, error } = Joi.object(schema).unknown().validate(req, {
       abortEarly: false,
       label: 'key',
+      convert: true,
       errors: { wrap: { label: '' } },
     });
     if (error) {
       const errorDetails = {};
       error.details?.forEach((d) => {
-        errorDetails[`${d.context.key}`] = d.message;
+        errorDetails[`${d.context.key}`] = d.message.replace(`${d.context.label} `, '');
       });
       throw HttpError(422, { error: errorDetails });
     }

@@ -1,6 +1,7 @@
 import HttpError from 'http-errors';
 import { v4 as uuidv4 } from 'uuid';
 import path from 'path';
+import fs from 'fs';
 import sharp from 'sharp';
 import sequelize from '../services/sequelize';
 import { Books, Authors, Categories, Reviews, BookCategories, BookFiles } from '../models';
@@ -303,6 +304,34 @@ class BooksController {
         code: res.statusCode,
         status: 'success',
         newBook,
+      });
+    } catch (er) {
+      next(er);
+    }
+  };
+
+  static addFiles = async (req, res, next) => {
+    try {
+      const { bookId } = req.params;
+      let book = await BookFiles.findByPk(bookId);
+      if (!book) {
+        book = await BookFiles.build({ bookId });
+      }
+      const { files } = req;
+      if (files.previewPDF) {
+        book.previewPDF = path.join('/images/books', `${files.previewPDF[0].filename}`);
+        fs.renameSync(files.previewPDF[0].path, path.join(path.resolve(), 'public', 'api/v1/images/books', `${files.previewPDF[0].filename}`));
+      }
+      if (files.fullPDF) {
+        book.fullPDF = path.join('/images/books', `${files.fullPDF[0].filename}`);
+        fs.renameSync(files.fullPDF[0].path, path.join(path.resolve(), 'public', 'api/v1/images/books', `${files.fullPDF[0].filename}`));
+      }
+      await book.save();
+
+      res.status(201).json({
+        code: res.statusCode,
+        status: 'success',
+        book,
       });
     } catch (er) {
       next(er);
