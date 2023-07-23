@@ -8,8 +8,10 @@ const router = express.Router();
 
 // public
 router.get('/', validate(authors.list), authorsController.list);
+// public
+router.get('/single/:authorId', validate(authors.single), authorsController.single);
 // admin
-router.post('/create', authorUploader, authorsController.create);
+router.post('/add', validate(authors.add), authorUploader, authorsController.add);
 // admin
-router.patch('/edit/:authorId', authorUploader, authorsController.edit);
+router.patch('/edit/:authorId', validate(authors.edit), authorUploader, authorsController.edit);
 export default router;

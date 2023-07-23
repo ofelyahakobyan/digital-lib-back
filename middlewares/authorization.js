@@ -11,7 +11,7 @@ const EXCLUDE = [
   `GET:${BASE_URL}/categories`,
   `GET:${BASE_URL}/authors`,
 ];
-const EXCLUDE_VAR = [`GET:${BASE_URL}/books/single`];
+const EXCLUDE_VAR = [`GET:${BASE_URL}/books/single`, `GET:${BASE_URL}/authors/single`];
 const authorization = (req, res, next) => {
   try {
     if (req.public) {
@@ -31,11 +31,9 @@ const authorization = (req, res, next) => {
     }
     const { authorization = '' } = req.headers;
     if (!authorization) {
-      throw HttpError(401, 'unauthorized user');
+      throw HttpError(401);
     }
     const { userID } = jwt.verify(authorization.replace('Bearer ', ''), JWT_SECRET);
-    // jwt verification failed
-    // customize error
     if (!userID) {
       throw HttpError(401);
     }

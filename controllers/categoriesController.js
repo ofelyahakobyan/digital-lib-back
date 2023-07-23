@@ -5,7 +5,7 @@ class CategoriesController {
   // public
   static list = async (req, res, next) => {
     try {
-      let { page = 1, limit = 10 } = req.query;
+      let { page = 1, limit = 20 } = req.query;
       page = +page;
       limit = +limit;
       const offset = (page - 1) * limit;
@@ -31,7 +31,7 @@ class CategoriesController {
   };
 
   // admin role is required
-  static create = async (req, res, next) => {
+  static add = async (req, res, next) => {
     try {
       const { category, parentCategory = null } = req.body;
       let parent = '';
@@ -39,7 +39,7 @@ class CategoriesController {
         parent = await Categories.findOne({ where: { category: parentCategory } });
       }
       if (parentCategory && !parent) {
-        throw HttpError(422);
+        throw HttpError(422, 'parent category does not exist');
       }
       const exists = await Categories.findOne({ where: { category } });
       if (exists) {
@@ -47,13 +47,37 @@ class CategoriesController {
       }
       const newCategory = await Categories.create({
         category,
-        parentCategory: parent.id,
+        parentCategory: parent.id || null,
       });
-      res.status(200).json({
+      res.status(201).json({
         code: res.statusCode,
         status: 'success',
-        message: 'new category successfully created',
+        message: 'new category have been successfully created',
         category: newCategory,
+      });
+    } catch (er) {
+      next(er);
+    }
+  };
+
+  // admin role is required
+  static edit = async (req, res, next) => {
+    try {
+      const { categoryId } = req.params;
+      const { category, parentCategory = null } = req.body;
+      const editable = await Categories.findByPk(categoryId);
+      const parent = await Categories.findOne({ where: { category: parentCategory } });
+      if (!editable) {
+        throw HttpError(404, 'category is not found');
+      }
+      editable.category = category || editable.category;
+      editable.parentCategory = parent?.id || editable.parentCategory;
+      editable.save();
+      res.status(201).json({
+        code: res.statusCode,
+        status: 'success',
+        message: 'category have been successfully modified',
+        category: editable,
       });
     } catch (er) {
       next(er);

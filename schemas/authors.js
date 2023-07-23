@@ -3,20 +3,32 @@ import Joi from 'joi';
 const authors = {
   list: {
     query: Joi.object({
-      page: Joi.number().integer().min(1).messages({
-        'number.integer': 'must be an integer',
-        'number.min': 'must be more than or equal to 1',
-        'number.base': 'must be a number',
-      }),
-      limit: Joi.number().integer().min(1).max(4)
-        .messages({
-          'number.integer': 'must be an integer',
-          'number.max': 'must be less than or equal to 4',
-          'number.min': 'must be more than or equal to 1',
-          'number.base': 'must be a number',
-        }),
+      page: Joi.number().integer().min(1),
+      limit: Joi.number().integer().min(1).max(4),
     }),
   },
-  // create: {},
+  single: { params: Joi.object({ authorId: Joi.number().integer().min(1).required() }) },
+  add: {
+    body: Joi.object({
+      firstName: Joi.string().trim().alphanum().min(1)
+        .max(100)
+        .required(),
+      lastName: Joi.string().trim().alphanum().min(1)
+        .max(100),
+      dob: Joi.date(),
+      bio: Joi.string().alphanum().min(1).max(32000),
+    }),
+  },
+  edit: {
+    params: Joi.object({ authorId: Joi.number().integer().min(1).required() }),
+    body: Joi.object({
+      firstName: Joi.string().trim().alphanum().min(1)
+        .max(100),
+      lastName: Joi.string().trim().alphanum().min(1)
+        .max(100),
+      dob: Joi.date(),
+      bio: Joi.string().alphanum().min(1).max(32000),
+    }),
+  },
 };
 export default authors;

@@ -1,6 +1,7 @@
 import HttpError from 'http-errors';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
+import fs from 'fs';
 import path from 'path';
 import sharp from 'sharp';
 import hash from '../helpers/hash';
@@ -13,12 +14,6 @@ class UsersController {
   // admin role is required
   static list = async (req, res, next) => {
     try {
-      const { userID, isAdmin } = req;
-
-      const user = await Users.findOne({ where: { id: userID, isAdmin } });
-      if (!user || !user.isAdmin) {
-        throw HttpError(401);
-      }
       let { page = 1, limit = 20 } = req.query;
       page = +page;
       limit = +limit;
@@ -142,6 +137,14 @@ class UsersController {
       const { file } = req;
       let avatar = '';
       if (file) {
+        if (user.avatar) {
+          const filePath = path.join(path.resolve(), 'public/api/v1/', `${user.avatar}`);
+          setImmediate(() => {
+            if (fs.existsSync(filePath)) {
+              fs.unlinkSync(filePath);
+            }
+          });
+        }
         const name = file.originalname.split('.')[0];
         const fileName = `user-${userID}-${uuidv4()}_${name}.jpg`;
         // multer resizer

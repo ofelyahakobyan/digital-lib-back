@@ -25,6 +25,7 @@ const EXCLUDE_VAR = [
   `DELETE:${BASE_URL}/user/wishlist`,
   `DELETE:${BASE_URL}/user/cart`,
   `POST:${BASE_URL}/user/password`,
+  `GET:${BASE_URL}/authors/single`,
 
 ];
 const authorization = (req, res, next) => {
@@ -43,11 +44,11 @@ const authorization = (req, res, next) => {
     }
     const { authorization = '' } = req.headers;
     if (!authorization) {
-      throw HttpError(401, 'unauthorized user');
+      throw HttpError(401);
     }
     const { userID, isAdmin } = jwt.verify(authorization.replace('Bearer ', ''), JWT_SECRET);
     if (!userID || !isAdmin) {
-      throw HttpError(403, 'invalid admin token');
+      throw HttpError(403);
     }
     req.userID = userID;
     req.isAdmin = isAdmin;

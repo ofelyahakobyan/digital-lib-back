@@ -1,40 +1,23 @@
 import Joi from 'joi';
 
 const categories = {
-  create: {
+  add: {
     body: Joi.object({
-      category: Joi.string()
-        .regex(/^[a-zA-Z]+$/)
-        .required()
-        .messages({
-          'string.empty': 'cannot be an empty string',
-          'any.required': 'is required',
-          'string.pattern.base': 'should contain only letters',
-          'string:base': 'should be a string',
-        }),
-      parentCategory: Joi.string()
-        .regex(/^[a-zA-Z]+$/)
-        .messages({
-          'string.empty': 'cannot be an empty string',
-          'string.pattern.base': 'should contain only letters',
-          'string:base': 'should be a string',
-        }),
+      category: Joi.string().trim().regex(/^[a-zA-Z]+$/).required(),
+      parentCategory: Joi.string().trim().regex(/^[a-zA-Z]+$/),
     }),
   },
   list: {
     query: Joi.object({
-      page: Joi.number().integer().min(1).messages({
-        'number.integer': 'must be an integer',
-        'number.min': 'must be more than or equal to 1',
-        'number.base': 'must be a number',
-      }),
-      limit: Joi.number().integer().min(1).max(10)
-        .messages({
-          'number.integer': 'must be an integer',
-          'number.max': 'must be less than or equal to 10',
-          'number.min': 'must be more than or equal to 1',
-          'number.base': 'must be a number',
-        }),
+      page: Joi.number().integer().min(1),
+      limit: Joi.number().integer().min(1).max(20),
+    }),
+  },
+  edit: {
+    params: Joi.object({ categoryId: Joi.number().integer().min(1).required() }),
+    body: Joi.object({
+      category: Joi.string().trim().regex(/^[a-zA-Z]+$/),
+      parentCategory: Joi.string().trim().regex(/^[a-zA-Z]+$/),
     }),
   },
 };

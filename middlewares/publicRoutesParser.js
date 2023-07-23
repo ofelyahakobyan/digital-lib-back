@@ -7,6 +7,8 @@ const PUBLIC_ROUTES = [
   `POST:${BASE_URL}/user/login`,
   `POST:${BASE_URL}/user/password-forgot`,
   `POST:${BASE_URL}/user/password-reset`,
+  `GET:${BASE_URL}/authors`,
+  `GET:${BASE_URL}/categories`,
 ];
 
 const publicRoutesParser = (req, res, next) => {

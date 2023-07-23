@@ -8,6 +8,8 @@ const router = express.Router();
 // public
 router.get('/', validate(categories.list), categoriesController.list);
 // admin
-router.post('/create', validate(categories.create), categoriesController.create);
+router.post('/add', validate(categories.add), categoriesController.add);
+// admin
+router.patch('/edit/:categoryId', validate(categories.edit), categoriesController.edit);
 
 export default router;

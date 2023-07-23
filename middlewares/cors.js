@@ -12,8 +12,12 @@ const cors = (req, res, next) => {
       );
       res.setHeader(
         'Access-Control-Allow-Headers',
-        'Authorization, X-Token, Content-Type',
+        'Content-Type, Authorization, X-Token',
       );
+      if (req.method === 'OPTIONS') {
+        // Handle OPTIONS request (pre-flight)
+        res.sendStatus(200);
+      }
     }
     next();
   } catch (er) {
