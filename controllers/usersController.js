@@ -51,6 +51,10 @@ class UsersController {
         lastName,
         password,
       });
+      const token = jwt.sign(
+        { userID: user.id, isAdmin: user.isAdmin },
+        JWT_SECRET,
+      );
       const newUser = {
         id: user.id,
         firstName: user.firstName,
@@ -62,6 +66,7 @@ class UsersController {
         code: res.statusCode,
         status: 'success',
         message: 'new user was successfully registered',
+        token,
         user: newUser,
       });
     } catch (er) {
@@ -167,6 +172,30 @@ class UsersController {
         status: 'success',
         user,
       });
+    } catch (er) {
+      next(er);
+    }
+  };
+
+  // logged-in  user role is required
+  static deleteProfile = async (req, res, next) => {
+    try {
+      const { userID } = req;
+      const user = await Users.findByPk(userID);
+      if (!user) {
+        throw HttpError(404, 'the provided userId is invalid');
+      }
+      if (user.avatar) {
+        const filePath = path.join(path.resolve(), 'public/api/v1/', `${user.avatar}`);
+        setImmediate(() => {
+          if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+          }
+        });
+      }
+      // also user's credit-cards should be deleted
+      await user.destroy();
+      res.status(204).json({ status: 'success' });
     } catch (er) {
       next(er);
     }

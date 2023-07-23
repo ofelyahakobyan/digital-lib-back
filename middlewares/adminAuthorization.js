@@ -15,11 +15,14 @@ const EXCLUDE = [
   `GET:${BASE_URL}/user/reviews`,
   `GET:${BASE_URL}/categories`,
   `GET:${BASE_URL}/authors`,
+  `DELETE:${BASE_URL}/user/profile`,
 ];
 
 const EXCLUDE_VAR = [
+  `GET:${BASE_URL}/books/reviews`,
   `GET:${BASE_URL}/books/single`,
-  `POST:${BASE_URL}/reviews/create`,
+  `POST:${BASE_URL}/user/reviews`,
+  `PATCH:${BASE_URL}/user/reviews`,
   `POST:${BASE_URL}/user/wishlist`,
   `POST:${BASE_URL}/user/cart`,
   `DELETE:${BASE_URL}/user/wishlist`,

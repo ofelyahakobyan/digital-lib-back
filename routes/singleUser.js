@@ -5,6 +5,8 @@ import validate from '../middlewares/validate';
 import users from '../schemas/user';
 import UserBooksController from '../controllers/userBooksController';
 import avatarUploader from '../middlewares/userAvatarUploader';
+import reviews from '../schemas/reviews';
+import reviewsController from '../controllers/reviewsController';
 
 const router = express.Router();
 
@@ -12,6 +14,7 @@ router.post('/registration', validate(users.registration), UsersController.regis
 router.post('/login', validate(users.login), UsersController.login);
 router.get('/profile', UsersController.getProfile);
 router.patch('/profile', validate(users.edit), avatarUploader, UsersController.editProfile);
+router.delete('/profile', UsersController.deleteProfile);
 router.post('/password-forgot', validate(users.passwordForgot), UsersController.forgotPassword);
 router.post('/password-reset', validate(users.passwordReset), UsersController.resetPassword);
 router.post('/password-change', validate(users.changePassword), UsersController.changePassword);
@@ -29,4 +32,8 @@ router.get('/cart', UserBooksController.cart);
 router.post('/cart/:bookId', UserBooksController.cartAdd);
 router.delete('/cart/:bookId', UserBooksController.cartDelete);
 
+router.get('/reviews', validate(reviews.userList), reviewsController.userList);
+router.post('/reviews/:bookId', validate(reviews.add), reviewsController.add);
+router.patch('/reviews/:reviewId', validate(reviews.userEdit), reviewsController.userEdit);
+router.delete('/reviews/:reviewId', validate(reviews.userDelete), reviewsController.userDelete);
 export default router;

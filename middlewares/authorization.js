@@ -11,7 +11,11 @@ const EXCLUDE = [
   `GET:${BASE_URL}/categories`,
   `GET:${BASE_URL}/authors`,
 ];
-const EXCLUDE_VAR = [`GET:${BASE_URL}/books/single`, `GET:${BASE_URL}/authors/single`];
+const EXCLUDE_VAR = [
+  `GET:${BASE_URL}/books/single`,
+  `GET:${BASE_URL}/authors/single`,
+  `GET:${BASE_URL}/books/reviews`,
+];
 const authorization = (req, res, next) => {
   try {
     if (req.public) {

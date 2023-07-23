@@ -29,9 +29,9 @@ Reviews.init(
   },
 );
 
-Reviews.belongsTo(Books, { foreignKey: 'bookId', onDelete: 'CASCADE' });
-Books.hasMany(Reviews, { foreignKey: 'bookId', onDelete: 'CASCADE' });
+Reviews.belongsTo(Books, { foreignKey: 'bookId', onDelete: 'CASCADE', as: 'book' });
+Books.hasMany(Reviews, { foreignKey: 'bookId', onDelete: 'CASCADE', as: 'reviews' });
 
-Reviews.belongsTo(Users, { foreignKey: 'userId', onDelete: 'SET NULL' });
-Users.hasMany(Reviews, { foreignKey: 'userId', onDelete: 'SET NULL' });
+Reviews.belongsTo(Users, { foreignKey: 'userId', onDelete: 'SET NULL', as: 'user' });
+Users.hasMany(Reviews, { foreignKey: 'userId', onDelete: 'SET NULL', as: 'reviews' });
 export default Reviews;

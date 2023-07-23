@@ -1,13 +1,17 @@
 import express from 'express';
 import reviewsController from '../controllers/reviewsController';
 import validate from '../middlewares/validate';
-import users from '../schemas/user';
-import UsersController from '../controllers/usersController';
+import reviews from '../schemas/reviews';
 
 const router = express.Router();
 // admin
-router.get('/', reviewsController.list);
+router.patch('/:reviewId', validate(reviews.adminEdit), reviewsController.adminEdit);
+router.delete('/:reviewId', validate(reviews.adminDelete), reviewsController.adminDelete);
 // logged user
-router.post('/create/:bookId', reviewsController.create);
+router.patch('/user-reviews/:reviewId');
+
+// public
+router.get('/', validate(reviews.list), reviewsController.list);
+router.get('/book-reviews/:bookId');
 
 export default router;
