@@ -1,5 +1,5 @@
 import HttpError from 'http-errors';
-import { Authors, Books, Reviews, UserBooks, Users } from '../models';
+import { Authors, BookFiles, Books, Reviews, UserBooks, Users } from '../models';
 import sequelize from '../services/sequelize';
 import userBooks from '../models/userBooks';
 
@@ -8,6 +8,7 @@ class UserBooksController {
     try {
       const { userID } = req;
       let { page = 1, limit = 8 } = req.query;
+      console.log(userID);
       page = +page;
       limit = +limit;
       const offset = (page - 1) * limit;
@@ -49,7 +50,8 @@ class UserBooksController {
               as: 'author',
               attributes: { exclude: ['createdAt', 'updatedAt', 'dob', 'bio'] },
             },
-            { model: Reviews, attributes: [] },
+            { model: Reviews, as: 'reviews', attributes: [] },
+            { model: BookFiles, as: 'bookFiles', attributes: { exclude: ['fullPDF'] } },
           ],
         },
       );
@@ -154,7 +156,8 @@ class UserBooksController {
               as: 'users',
             },
             { model: Authors, as: 'author', attributes: { exclude: ['createdAt', 'updatedAt', 'dob', 'bio'] } },
-            { model: Reviews, attributes: [] },
+            { model: Reviews, as: 'reviews', attributes: [] },
+            { model: BookFiles, as: 'bookFiles' },
           ],
         },
       );

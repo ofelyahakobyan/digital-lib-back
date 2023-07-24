@@ -7,6 +7,7 @@ import UserBooksController from '../controllers/userBooksController';
 import avatarUploader from '../middlewares/userAvatarUploader';
 import reviews from '../schemas/reviews';
 import reviewsController from '../controllers/reviewsController';
+import userBooks from '../schemas/userBooks';
 
 const router = express.Router();
 
@@ -24,11 +25,11 @@ router.get('/login-facebook', passport.authenticate('facebook', { session: false
 router.get('/facebook', passport.authenticate('facebook', { session: false }), (req, res) => res.send(req.user ? req.user : 'does not exists'));
 
 // user Books
-router.get('/wishlist', UserBooksController.wishlist);
+router.get('/wishlist', validate(userBooks.wishlist), UserBooksController.wishlist);
 router.post('/wishlist/:bookId', UserBooksController.wishlistAdd);
 router.delete('/wishlist/:bookId', UserBooksController.wishlistDelete);
 
-router.get('/cart', UserBooksController.cart);
+router.get('/cart', validate(userBooks.cart), UserBooksController.cart);
 router.post('/cart/:bookId', UserBooksController.cartAdd);
 router.delete('/cart/:bookId', UserBooksController.cartDelete);
 
