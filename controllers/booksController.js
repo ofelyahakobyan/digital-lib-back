@@ -321,8 +321,15 @@ class BooksController {
       const book = await Books.findByPk(
         bookId,
         {
-          include: [{ model: Authors, attributes: { exclude: ['bio', 'dob', 'createdAt', 'updatedAt'] } },
-            { model: Reviews, attributes: [] }],
+          include: [
+            {
+              model: Authors,
+              as: 'author',
+              attributes: { exclude: ['bio', 'dob', 'createdAt', 'updatedAt', 'coverImage'] },
+            },
+            { model: Reviews, as: 'reviews', attributes: [] },
+            { model: BookFiles, as: 'bookFiles' },
+          ],
           attributes: {
             exclude: ['createdAt', 'updatedAt', 'authorId', 'publisherId'],
             include: [

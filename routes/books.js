@@ -12,7 +12,7 @@ const router = express.Router();
 router.get('/', validate(books.list), BooksController.list);
 router.get('/author/:authorId', validate(books.authorList), BooksController.authorList);
 router.get('/category/:categoryId', validate(books.categoryList), BooksController.categoryList);
-router.get('/single/:bookId', BooksController.single);
+router.get('/single/:bookId', validate(books.single), BooksController.single);
 router.get('/reviews/:bookId', validate(reviews.bookList), ReviewsController.bookList);
 router.post('/add', coverUploader, BooksController.add);
 router.put('/add-files/:bookId', filesUploader, BooksController.addFiles);

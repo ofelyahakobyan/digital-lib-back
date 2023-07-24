@@ -38,5 +38,6 @@ const books = {
       limit: Joi.number().integer().min(1).max(4),
     }),
   },
+  single: { params: Joi.object({ bookId: Joi.number().integer().min(1).required() }) },
 };
 export default books;
