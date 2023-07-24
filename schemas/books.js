@@ -39,5 +39,6 @@ const books = {
     }),
   },
   single: { params: Joi.object({ bookId: Joi.number().integer().min(1).required() }) },
+  add: {},
 };
 export default books;

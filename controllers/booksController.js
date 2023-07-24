@@ -419,6 +419,7 @@ class BooksController {
       if (bookAlreadyHasCategory) {
         throw HttpError(422, 'book already has the provided category');
       }
+      newBook.status = 'pending';
       await newBook.save();
       if (file) {
         const name = file.originalname.split('.')[0];
