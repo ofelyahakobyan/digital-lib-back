@@ -14,4 +14,5 @@ router.get('/single/:authorId', validate(authors.single), authorsController.sing
 router.post('/add', validate(authors.add), authorUploader, authorsController.add);
 // admin
 router.patch('/edit/:authorId', validate(authors.edit), authorUploader, authorsController.edit);
+
 export default router;

@@ -7,14 +7,24 @@ import sequelize from '../services/sequelize';
 import { Books, Authors, Categories, Reviews, BookCategories, BookFiles } from '../models';
 
 class BooksController {
-  // public
   static list = async (req, res, next) => {
     try {
       let { page = 1, limit = 9 } = req.query;
-      const { minPrice = 0, maxPrice = 100000000000, rating, format = ['text', 'audio'], language, authorId, popular, brandNew, bestseller, q } = req.query;
-      let { categoryId } = req.query;
+      const {
+        minPrice = 0,
+        maxPrice = 9999999,
+        rating,
+        format = [],
+        languages = [],
+        authorIds = [],
+        popular,
+        brandNew,
+        bestseller,
+        q,
+        categoryIds = [],
+      } = req.query;
       const initialConditions = {
-        status: { $not: 'unavailable' },
+        status: 'available',
         price: {
           $and: {
             $gte: minPrice,
@@ -22,51 +32,66 @@ class BooksController {
           },
         },
       };
-      let where = initialConditions;
-      if (format === 'text') {
+      let itemsByCategories = [];
+      const where = initialConditions;
+      if (format.includes('text')) {
         where.audio = false;
       }
-      if (format === 'audio') {
+      if (format.includes('audio')) {
         where.audio = true;
       }
-      if (language) {
-        where.language = language.toLowerCase();
+      if (format.includes('text') && format.includes('audio')) {
+        where.audio = { $or: [true, false] };
       }
-      if (authorId) {
-        where.authorId = authorId;
+      // if (format[1] === 'audio') {
+      //   where.audio = true;
+      // }
+      if (languages.length) {
+        where.language = { $or: [languages] };
       }
-      if (popular) {
+      if (authorIds.length) {
+        where.authorId = { $or: [authorIds] };
+      }
+      if (categoryIds.length) {
+        const items = await BookCategories.findAll({
+          where: { categoryId: { $or: [categoryIds] } },
+          raw: true,
+        });
+        itemsByCategories = items.map((item) => item.bookId);
+      }
+      if (popular === '1') {
         where.popular = true;
       }
-      if (brandNew) {
+      if (brandNew === '1') {
         where.new = true;
       }
-      if (bestseller) {
+      if (bestseller === '1') {
         where.bestseller = true;
       }
       const mask = { $like: `%${q}%` };
-      let itemsByCategories = [];
-
       if (q) {
-        categoryId = '';
-        where = initialConditions;
+        // categoryId = '';
+        // where = initialConditions;
         const cats = await Categories.findOne({ where: { category: { $like: `%${q}%` } } });
-        if (cats && !categoryId) {
+        if (cats && !categoryIds.length) {
           const items = await BookCategories.findAll({ where: { categoryId: cats.id }, raw: true });
           itemsByCategories = items.map((item) => item.bookId);
         }
         where.$or = [
           { title: mask },
           { description: mask },
-          { id: { $in: itemsByCategories } },
+          { language: mask },
           { '$author.firstName$': mask },
           { '$author.lastName$': mask },
         ];
       }
+      if (itemsByCategories.length) {
+        where.id = { $or: [itemsByCategories] };
+      }
       page = +page;
       limit = +limit;
       const offset = (page - 1) * limit;
-      const total = await Books.count();
+      const total = await Books.count({ where });
       const books = await Books.findAll({
         limit,
         offset,
@@ -105,8 +130,8 @@ class BooksController {
           {
             model: Categories,
             as: 'categories',
-            where: categoryId ? { id: categoryId } : { },
-            required: !!categoryId,
+            where: categoryIds.length ? { id: { $or: [categoryIds] } } : { },
+            required: !!categoryIds.length,
             through: { attributes: [] },
             attributes: { exclude: ['createdAt', 'updatedAt'] },
           },
@@ -114,7 +139,9 @@ class BooksController {
             model: Reviews,
             attributes: [],
             as: 'reviews',
-            where: rating ? sequelize.where(sequelize.literal('(select ceil(avg(rating)) from reviews group by bookId having bookId=books.id )'), { $eq: rating }) : {},
+            where: rating
+              ? sequelize.where(sequelize.literal('(select ceil(avg(rating)) from reviews group by bookId having bookId=books.id )'), { $eq: rating })
+              : {},
             required: !!rating,
           },
           {
@@ -124,7 +151,6 @@ class BooksController {
           },
         ],
       });
-      const totalFound = books.length;
       res.status(200).json({
         code: res.statusCode,
         status: 'success',
@@ -132,7 +158,6 @@ class BooksController {
         totalPages: Math.ceil(total / limit),
         limit,
         total,
-        totalFound,
         books,
       });
     } catch (er) {
@@ -191,7 +216,6 @@ class BooksController {
           },
         ],
       });
-      const totalFound = books.length;
       res.status(200).json({
         code: res.statusCode,
         status: 'success',
@@ -199,7 +223,90 @@ class BooksController {
         totalPages: Math.ceil(total / limit),
         limit,
         total,
-        totalFound,
+        books,
+      });
+    } catch (er) {
+      next(er);
+    }
+  };
+
+  // public
+  static categoryList = async (req, res, next) => {
+    try {
+      let { page = 1, limit = 4 } = req.query;
+      const { categoryId } = req.params;
+      page = +page;
+      limit = +limit;
+      const offset = (page - 1) * limit;
+      const total = await Books.count({
+        include:
+      {
+        model: Categories,
+        as: 'categories',
+        where: { id: categoryId },
+        through: { attributes: [] },
+      },
+      });
+      const books = await Books.findAll({
+        limit,
+        offset,
+        attributes: {
+          exclude: [
+            'status',
+            'createdAt',
+            'updatedAt',
+            'description',
+            'publisherId',
+            'coverImage',
+          ],
+          include: [
+            [
+              sequelize.literal(
+                '(select count(bookId) from reviews group by bookId having bookId=id)',
+              ),
+              'totalReviews',
+            ],
+            [
+              sequelize.literal(
+                '(select ceil(avg(rating)) as avg from reviews group by bookId having bookId=id )',
+              ),
+              'averageRating',
+            ],
+          ],
+        },
+        include: [
+          {
+            model: Reviews,
+            attributes: [],
+            as: 'reviews',
+          },
+          {
+            model: Authors,
+            as: 'author',
+            required: true,
+            attributes: { exclude: ['bio', 'dob', 'createdAt', 'updatedAt'] },
+          },
+          {
+            model: BookFiles,
+            as: 'bookFiles',
+            attributes: { exclude: ['createdAt', 'updatedAt'] },
+          },
+          {
+            model: Categories,
+            as: 'categories',
+            where: { id: categoryId },
+            through: { attributes: [] },
+            attributes: { exclude: ['createdAt', 'updatedAt'] },
+          },
+        ],
+      });
+      res.status(200).json({
+        code: res.statusCode,
+        status: 'success',
+        currentPage: page,
+        totalPages: Math.ceil(total / limit),
+        limit,
+        total,
         books,
       });
     } catch (er) {
