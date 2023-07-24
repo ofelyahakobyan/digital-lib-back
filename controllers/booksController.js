@@ -141,6 +141,73 @@ class BooksController {
   };
 
   // public
+  static authorList = async (req, res, next) => {
+    try {
+      let { page = 1, limit = 4 } = req.query;
+      const { authorId } = req.params;
+      const where = { authorId };
+      page = +page;
+      limit = +limit;
+      const offset = (page - 1) * limit;
+      const total = await Books.count({ where });
+      const books = await Books.findAll({
+        limit,
+        offset,
+        where,
+        attributes: {
+          exclude: [
+            'status',
+            'createdAt',
+            'updatedAt',
+            'description',
+            'publisherId',
+            'coverImage',
+          ],
+          include: [
+            [
+              sequelize.literal(
+                '(select count(bookId) from reviews group by bookId having bookId=id)',
+              ),
+              'totalReviews',
+            ],
+            [
+              sequelize.literal(
+                '(select ceil(avg(rating)) as avg from reviews group by bookId having bookId=id )',
+              ),
+              'averageRating',
+            ],
+          ],
+        },
+        include: [
+          {
+            model: Reviews,
+            attributes: [],
+            as: 'reviews',
+          },
+          {
+            model: BookFiles,
+            as: 'bookFiles',
+            attributes: { exclude: ['createdAt', 'updatedAt'] },
+          },
+        ],
+      });
+      const totalFound = books.length;
+      res.status(200).json({
+        code: res.statusCode,
+        status: 'success',
+        currentPage: page,
+        totalPages: Math.ceil(total / limit),
+        limit,
+        total,
+        totalFound,
+        books,
+      });
+    } catch (er) {
+      next(er);
+    }
+  };
+
+  // public
   static single = async (req, res, next) => {
     try {
       const { bookId } = req.params;

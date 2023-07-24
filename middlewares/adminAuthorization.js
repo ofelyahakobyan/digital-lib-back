@@ -21,6 +21,7 @@ const EXCLUDE = [
 const EXCLUDE_VAR = [
   `GET:${BASE_URL}/books/reviews`,
   `GET:${BASE_URL}/books/single`,
+  `GET:${BASE_URL}/books/author`,
   `POST:${BASE_URL}/user/reviews`,
   `PATCH:${BASE_URL}/user/reviews`,
   `POST:${BASE_URL}/user/wishlist`,
