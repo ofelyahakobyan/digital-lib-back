@@ -76,7 +76,7 @@ class UserBooksController {
       const where = { userId: userID, bookId: +bookId, status: 'wish' };
       const bookExists = await Books.findByPk(bookId);
       if (!bookExists) {
-        throw HttpError(404);
+        throw HttpError(404, 'book with the provided  id does not exist');
       }
       const itemExists = await UserBooks.findOne({ where });
       if (itemExists) {
@@ -112,7 +112,7 @@ class UserBooksController {
       const where = { userId: userID, bookId, status: 'wish' };
       const item = await UserBooks.findOne({ where });
       if (!item) {
-        throw HttpError(404);
+        throw HttpError(404, 'book not found on users wishlist');
       }
       await item.destroy();
       res.status(204).json({ status: 'success' });
@@ -187,6 +187,7 @@ class UserBooksController {
       const { userID } = req;
       const { bookId } = req.params;
       const where = { userId: userID, bookId: +bookId, status: 'cart' };
+      let item = {};
       const total = await UserBooks.count({
         where: {
           userId: userID,
@@ -198,21 +199,23 @@ class UserBooksController {
       }
       const bookExists = await Books.findByPk(bookId);
       if (!bookExists) {
-        throw HttpError(404);
+        throw HttpError(404, 'book with the provided  id does not exist');
       }
       const itemExists = await UserBooks.findOne({ where });
       if (itemExists) {
         throw HttpError(409, 'item already on the cart');
       }
-      const itemOnTheWishList = await userBooks.findOne({ ...where, status: 'wish' });
-      console.log(itemOnTheWishList);
+      const itemOnTheWishList = await userBooks.findOne({ where: { ...where, status: 'wish' } });
       if (itemOnTheWishList) {
+        console.log(itemOnTheWishList.status);
         itemOnTheWishList.status = 'cart';
         await itemOnTheWishList.save();
+        item = itemOnTheWishList;
+      } else {
+        item = await UserBooks.create(where);
       }
-      const item = await UserBooks.create(where);
       if (!item) {
-        throw HttpError(400);
+        throw HttpError(400, 'can not to add item to the cart');
       }
       res.status(201).json({
         code: res.statusCode,
@@ -231,7 +234,7 @@ class UserBooksController {
       const where = { userId: userID, bookId, status: 'cart' };
       const item = await UserBooks.findOne({ where });
       if (!item) {
-        throw HttpError(404);
+        throw HttpError(404, 'book not found on users cart');
       }
       await item.destroy();
       res.status(204).json({ status: 'success' });

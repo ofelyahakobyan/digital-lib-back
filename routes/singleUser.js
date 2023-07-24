@@ -26,12 +26,12 @@ router.get('/facebook', passport.authenticate('facebook', { session: false }), (
 
 // user Books
 router.get('/wishlist', validate(userBooks.wishlist), UserBooksController.wishlist);
-router.post('/wishlist/:bookId', UserBooksController.wishlistAdd);
-router.delete('/wishlist/:bookId', UserBooksController.wishlistDelete);
+router.post('/wishlist/:bookId', validate(userBooks.add), UserBooksController.wishlistAdd);
+router.delete('/wishlist/:bookId', validate(userBooks.delete), UserBooksController.wishlistDelete);
 
 router.get('/cart', validate(userBooks.cart), UserBooksController.cart);
-router.post('/cart/:bookId', UserBooksController.cartAdd);
-router.delete('/cart/:bookId', UserBooksController.cartDelete);
+router.post('/cart/:bookId', validate(userBooks.add), UserBooksController.cartAdd);
+router.delete('/cart/:bookId', validate(userBooks.delete), UserBooksController.cartDelete);
 
 router.get('/reviews', validate(reviews.userList), reviewsController.userList);
 router.post('/reviews/:bookId', validate(reviews.add), reviewsController.add);

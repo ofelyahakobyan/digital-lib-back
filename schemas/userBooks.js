@@ -13,5 +13,7 @@ const userBooks = {
       limit: Joi.number().integer().min(1).max(8),
     }),
   },
+  add: { params: Joi.object({ bookId: Joi.number().integer().min(1).required() }) },
+  delete: { params: Joi.object({ bookId: Joi.number().integer().min(1).required() }) },
 };
 export default userBooks;
