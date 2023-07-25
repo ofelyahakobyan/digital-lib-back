@@ -24,7 +24,7 @@ class BooksController {
         categoryIds = [],
       } = req.query;
       const initialConditions = {
-        status: 'available',
+        status: { $not: 'unavailable' },
         price: {
           $and: {
             $gte: minPrice,
@@ -43,9 +43,7 @@ class BooksController {
       if (format.includes('text') && format.includes('audio')) {
         where.audio = { $or: [true, false] };
       }
-      // if (format[1] === 'audio') {
-      //   where.audio = true;
-      // }
+
       if (languages.length) {
         where.language = { $or: [languages] };
       }
@@ -59,13 +57,13 @@ class BooksController {
         });
         itemsByCategories = items.map((item) => item.bookId);
       }
-      if (popular === '1') {
+      if (popular) {
         where.popular = true;
       }
-      if (brandNew === '1') {
+      if (brandNew) {
         where.new = true;
       }
-      if (bestseller === '1') {
+      if (bestseller) {
         where.bestseller = true;
       }
       const mask = { $like: `%${q}%` };
@@ -97,7 +95,6 @@ class BooksController {
         offset,
         attributes: {
           exclude: [
-            'status',
             'createdAt',
             'updatedAt',
             'description',
@@ -252,7 +249,6 @@ class BooksController {
         offset,
         attributes: {
           exclude: [
-            'status',
             'createdAt',
             'updatedAt',
             'description',
@@ -364,7 +360,6 @@ class BooksController {
 
   // TODO admin should be able to edit books
   // TODO here should  be book upload API
-  // OFELYA'S VERSION
 
   static add = async (req, res, next) => {
     try {
@@ -380,6 +375,7 @@ class BooksController {
         bestseller = false,
       } = req.body;
       const { file } = req;
+      console.log(file);
       let coverXS = '';
       let coverS = '';
       let coverM = '';
@@ -395,7 +391,6 @@ class BooksController {
         bestseller,
         audio: false,
         publisherId: null,
-        status: 'unavailable',
         coverImage: coverM || 'default',
       };
       if (!categories || !categories[0] || !categories.length) {
@@ -403,27 +398,32 @@ class BooksController {
       }
       // categories should be validated as an array from JOI
       const newBook = await Books.build(bookData);
+      console.log(newBook);
       if (!newBook) {
         throw HttpError(400, 'unable to create book');
       }
-      const existingCategories = await Categories.findAll({ where: { id: { $in: categories } } });
+      const existingCategories = await Categories.findAll({ where: { id: { $in: [categories] } } });
       if (!existingCategories.length) {
         throw HttpError(400, 'invalid categories are provided');
       }
       const bookAlreadyHasCategory = await BookCategories.findOne({
         where: {
           bookId: newBook.id,
-          categoryId: { $in: categories },
+          categoryId: { $in: [categories] },
         },
       });
       if (bookAlreadyHasCategory) {
         throw HttpError(422, 'book already has the provided category');
       }
-      newBook.status = 'pending';
+      const author = await Authors.findByPk(authorId);
+      if (!author) {
+        throw HttpError(404, 'author with the provided id does not exist ');
+      }
+      newBook.status = 'upcoming';
       await newBook.save();
       if (file) {
         const name = file.originalname.split('.')[0];
-        const fileName = `book-${uuidv4()}_${name}.jpg`;
+        const fileName = `book-${title}-${uuidv4()}_${name}.jpg`;
         // multer resizer
         coverXS = path.join('images/covers', `extra-small-${fileName}`);
         coverS = path.join('images/covers', `small-${fileName}`);

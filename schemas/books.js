@@ -17,12 +17,11 @@ const books = {
       languages: Joi.array().items(Joi.string().regex(/^[a-zA-Z]+$/)).default([]),
       authorIds: Joi.array().items(Joi.number().integer().min(1)).default([]),
       categoryIds: Joi.array().items(Joi.number().integer().min(1)).default([]),
-      popular: Joi.string().regex(/^[01]$/),
-      brandNew: Joi.string().regex(/^[01]$/),
-      bestseller: Joi.string().regex(/^[01]$/),
+      popular: Joi.boolean().default(false),
+      brandNew: Joi.string().default(false),
+      bestseller: Joi.string().default(false),
+      q: Joi.string(),
     }),
-
-    q: Joi.string(),
   },
   authorList: {
     params: Joi.object({ authorId: Joi.number().integer().min(1).required() }),
@@ -39,6 +38,18 @@ const books = {
     }),
   },
   single: { params: Joi.object({ bookId: Joi.number().integer().min(1).required() }) },
-  add: {},
+  add: {
+    body: Joi.object({
+      title: Joi.string().trim().max(255).required(),
+      price: Joi.number().min(0).max(9999999).required(),
+      description: Joi.string().trim().min(3).max(32000),
+      language: Joi.string().pattern(/^[a-zA-Z]+$/).required(),
+      authorId: Joi.number().integer().min(1).required(),
+      categories: Joi.array().items(Joi.number().integer().min(1)).required(),
+      popular: Joi.boolean().default(false),
+      brandNew: Joi.boolean().default(false),
+      bestseller: Joi.boolean().default(false),
+    }),
+  },
 };
 export default books;

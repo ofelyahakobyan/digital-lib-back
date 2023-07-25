@@ -14,7 +14,7 @@ const router = express.Router();
 router.post('/registration', validate(users.registration), UsersController.registration);
 router.post('/login', validate(users.login), UsersController.login);
 router.get('/profile', UsersController.getProfile);
-router.patch('/profile', validate(users.edit), avatarUploader, UsersController.editProfile);
+router.patch('/profile', avatarUploader, validate(users.edit), UsersController.editProfile);
 router.delete('/profile', UsersController.deleteProfile);
 router.post('/password-forgot', validate(users.passwordForgot), UsersController.forgotPassword);
 router.post('/password-reset', validate(users.passwordReset), UsersController.resetPassword);

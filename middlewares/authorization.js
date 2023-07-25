@@ -17,6 +17,7 @@ const EXCLUDE_VAR = [
   `GET:${BASE_URL}/books/reviews`,
   `GET:${BASE_URL}/books/author`,
   `GET:${BASE_URL}/books/category`,
+  `GET:${BASE_URL}/images/authors`,
 ];
 const authorization = (req, res, next) => {
   try {

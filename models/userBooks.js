@@ -30,7 +30,6 @@ UserBooks.init(
       unique: 'compositeIndex',
     },
   },
-
   {
     sequelize,
     tableName: 'user_books',

@@ -11,8 +11,8 @@ router.get('/', validate(authors.list), authorsController.list);
 // public
 router.get('/single/:authorId', validate(authors.single), authorsController.single);
 // admin
-router.post('/add', validate(authors.add), authorUploader, authorsController.add);
+router.post('/add', authorUploader, validate(authors.add), authorsController.add);
 // admin
-router.patch('/edit/:authorId', validate(authors.edit), authorUploader, authorsController.edit);
+router.patch('/edit/:authorId', authorUploader, validate(authors.edit), authorsController.edit);
 
 export default router;
