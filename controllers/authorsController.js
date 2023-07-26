@@ -93,8 +93,8 @@ class authorsController {
         // multer resizer
         avatar = path.join('images/authors', fileName);
         avatarSmall = path.join('images/authors', `small-${fileName}`);
-        const fullPath = path.join(path.resolve(), 'public', 'api/v1', avatar);
-        const fullPathSmall = path.join(path.resolve(), 'public', 'api/v1', avatarSmall);
+        const fullPath = path.join(path.resolve(), 'public', avatar);
+        const fullPathSmall = path.join(path.resolve(), 'public', avatarSmall);
         await sharp(file.buffer).resize({
           width: 285,
           height: 425,

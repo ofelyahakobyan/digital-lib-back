@@ -429,7 +429,7 @@ class BooksController {
         coverS = path.join('images/covers', `small-${fileName}`);
         coverM = path.join('images/covers', `medium-${fileName}`);
         coverL = path.join('images/covers', `large-${fileName}`);
-        const fullPath = path.join(path.resolve(), 'public', 'api/v1');
+        const fullPath = path.join(path.resolve(), 'public');
         await sharp(file.buffer)
           .resize({ width: 110 })
           .rotate()
@@ -502,11 +502,11 @@ class BooksController {
       const { files } = req;
       if (files.previewPDF) {
         book.previewPDF = path.join('/images/books', `${files.previewPDF[0].filename}`);
-        fs.renameSync(files.previewPDF[0].path, path.join(path.resolve(), 'public', 'api/v1/images/books', `${files.previewPDF[0].filename}`));
+        fs.renameSync(files.previewPDF[0].path, path.join(path.resolve(), 'public', '/images/books', `${files.previewPDF[0].filename}`));
       }
       if (files.fullPDF) {
         book.fullPDF = path.join('/images/books', `${files.fullPDF[0].filename}`);
-        fs.renameSync(files.fullPDF[0].path, path.join(path.resolve(), 'public', 'api/v1/images/books', `${files.fullPDF[0].filename}`));
+        fs.renameSync(files.fullPDF[0].path, path.join(path.resolve(), 'public', '/images/books', `${files.fullPDF[0].filename}`));
       }
       await book.save();
 

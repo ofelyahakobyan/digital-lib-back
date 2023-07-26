@@ -154,7 +154,7 @@ class UsersController {
         const fileName = `user-${userID}-${uuidv4()}_${name}.jpg`;
         // multer resizer
         avatar = path.join('images/users', fileName);
-        const fullPath = path.join(path.resolve(), 'public', 'api/v1', avatar);
+        const fullPath = path.join(path.resolve(), 'public', avatar);
         await sharp(file.buffer).resize(86, 86).rotate().jpeg({ quality: 90, mozjpeg: true })
           .toFile(fullPath);
       }

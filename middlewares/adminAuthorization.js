@@ -31,7 +31,8 @@ const EXCLUDE_VAR = [
   `DELETE:${BASE_URL}/user/cart`,
   `POST:${BASE_URL}/user/password`,
   `GET:${BASE_URL}/authors/single`,
-  `GET:${BASE_URL}/images/authors`,
+  'GET:/images',
+  `GET:/${BASE_URL}/images`,
 
 ];
 const authorization = (req, res, next) => {
