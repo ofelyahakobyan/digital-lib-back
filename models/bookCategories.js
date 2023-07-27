@@ -26,6 +26,6 @@ BookCategories.init(
   },
 );
 
-Books.belongsToMany(Categories, { through: BookCategories, as: 'categories', foreignKey: 'bookId' });
+Books.belongsToMany(Categories, { through: BookCategories, as: 'categories', foreignKey: 'bookId', onDelete: 'CASCADE' });
 Categories.belongsToMany(Books, { through: BookCategories, as: 'books', foreignKey: 'categoryId' });
 export default BookCategories;

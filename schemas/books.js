@@ -51,5 +51,19 @@ const books = {
       bestseller: Joi.boolean().default(false),
     }),
   },
+  edit: {
+    params: Joi.object({ bookId: Joi.number().integer().min(1).required() }),
+    body: Joi.object({
+      title: Joi.string().trim().max(255),
+      price: Joi.number().min(0).max(9999999),
+      description: Joi.string().trim().min(3).max(32000),
+      language: Joi.string().pattern(/^[a-zA-Z]+$/),
+      authorId: Joi.number().integer().min(1),
+      categories: Joi.array().items(Joi.number().integer().min(1)),
+      popular: Joi.boolean().default(false),
+      brandNew: Joi.boolean().default(false),
+      bestseller: Joi.boolean().default(false),
+    }),
+  },
 };
 export default books;

@@ -7,6 +7,7 @@ import sharp from 'sharp';
 import hash from '../helpers/hash';
 import { Users } from '../models';
 import Mail from '../services/mail';
+import fileRemover from '../helpers/fileRemover';
 
 const { JWT_SECRET } = process.env;
 
@@ -143,12 +144,8 @@ class UsersController {
       let avatar = '';
       if (file) {
         if (user.avatar) {
-          const filePath = path.join(path.resolve(), 'public/api/v1/', `${user.avatar}`);
-          setImmediate(() => {
-            if (fs.existsSync(filePath)) {
-              fs.unlinkSync(filePath);
-            }
-          });
+          const filePath = path.join(path.resolve(), 'public', `${user.avatar}`);
+          fileRemover(filePath);
         }
         const name = file.originalname.split('.')[0];
         const fileName = `user-${userID}-${uuidv4()}_${name}.jpg`;

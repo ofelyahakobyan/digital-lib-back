@@ -3,8 +3,10 @@ import { v4 as uuidv4 } from 'uuid';
 import path from 'path';
 import fs from 'fs';
 import sharp from 'sharp';
+import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
 import sequelize from '../services/sequelize';
 import { Books, Authors, Categories, Reviews, BookCategories, BookFiles } from '../models';
+import fileRemover from '../helpers/fileRemover';
 
 class BooksController {
   static list = async (req, res, next) => {
@@ -358,10 +360,9 @@ class BooksController {
     }
   };
 
-  // TODO admin should be able to edit books
-  // TODO here should  be book upload API
-
+  // separate worker
   static add = async (req, res, next) => {
+    let t = null;
     try {
       const {
         title,
@@ -374,63 +375,33 @@ class BooksController {
         popular = false,
         bestseller = false,
       } = req.body;
-      const { file } = req;
-      console.log(file);
       let coverXS = '';
       let coverS = '';
       let coverM = '';
       let coverL = '';
-      const bookData = {
-        title,
-        price,
-        description,
-        language,
-        authorId,
-        new: brandNew,
-        popular,
-        bestseller,
-        audio: false,
-        publisherId: null,
-        coverImage: coverM || 'default',
-      };
-      if (!categories || !categories[0] || !categories.length) {
-        throw HttpError(400, 'at least one category should be provided');
-      }
-      // categories should be validated as an array from JOI
-      const newBook = await Books.build(bookData);
-      console.log(newBook);
-      if (!newBook) {
-        throw HttpError(400, 'unable to create book');
-      }
+      const bookFilesData = {};
+
+      const { files } = req;
+
       const existingCategories = await Categories.findAll({ where: { id: { $in: [categories] } } });
       if (!existingCategories.length) {
         throw HttpError(400, 'invalid categories are provided');
-      }
-      const bookAlreadyHasCategory = await BookCategories.findOne({
-        where: {
-          bookId: newBook.id,
-          categoryId: { $in: [categories] },
-        },
-      });
-      if (bookAlreadyHasCategory) {
-        throw HttpError(422, 'book already has the provided category');
       }
       const author = await Authors.findByPk(authorId);
       if (!author) {
         throw HttpError(404, 'author with the provided id does not exist ');
       }
-      newBook.status = 'upcoming';
-      await newBook.save();
-      if (file) {
-        const name = file.originalname.split('.')[0];
+
+      if (files.cover) {
+        const name = files.cover[0].originalname.split('.')[0];
         const fileName = `book-${title}-${uuidv4()}_${name}.jpg`;
         // multer resizer
-        coverXS = path.join('images/covers', `extra-small-${fileName}`);
-        coverS = path.join('images/covers', `small-${fileName}`);
-        coverM = path.join('images/covers', `medium-${fileName}`);
-        coverL = path.join('images/covers', `large-${fileName}`);
-        const fullPath = path.join(path.resolve(), 'public');
-        await sharp(file.buffer)
+        coverXS = `extra-small-${fileName}`;
+        coverS = `small-${fileName}`;
+        coverM = `medium-${fileName}`;
+        coverL = `large-${fileName}`;
+        const fullPath = path.join(path.resolve(), 'public/images/covers');
+        await sharp(files.cover[0].path)
           .resize({ width: 110 })
           .rotate()
           .jpeg({
@@ -439,7 +410,7 @@ class BooksController {
           })
           .toFile(`${fullPath}/${coverXS}`);
 
-        await sharp(file.buffer)
+        await sharp(files.cover[0].path)
           .resize({ width: 160 })
           .rotate()
           .jpeg({
@@ -448,7 +419,7 @@ class BooksController {
           })
           .toFile(`${fullPath}/${coverS}`);
 
-        await sharp(file.buffer)
+        await sharp(files.cover[0].path)
           .resize({ width: 285 })
           .rotate()
           .jpeg({
@@ -457,7 +428,7 @@ class BooksController {
           })
           .toFile(`${fullPath}/${coverM}`);
 
-        await sharp(file.buffer)
+        await sharp(files.cover[0].path)
           .resize({
             width: 387,
             fit: 'contain',
@@ -469,53 +440,289 @@ class BooksController {
           })
           .trim()
           .toFile(`${fullPath}/${coverL}`);
-
-        await BookFiles.create({
-          bookId: newBook.id,
-          coverXS,
-          coverS,
-          coverM,
-          coverL,
-        });
+        bookFilesData.coverXS = `images/covers/${coverXS}`;
+        bookFilesData.coverS = `images/covers/${coverS}`;
+        bookFilesData.coverM = `images/covers/${coverM}`;
+        bookFilesData.coverL = `images/covers/${coverL}`;
+      }
+      if (files.preview) {
+        const name = files.preview[0].originalname.split('.')[0];
+        const ext = files.preview[0].mimetype.split('/')[1];
+        const fileName = `${title}-preview-${uuidv4()}_${name}.${ext}`;
+        const newPath = path.join(path.resolve(), 'public/books/previews', fileName);
+        fs.renameSync(files.preview[0].path, newPath);
+        bookFilesData.previewPDF = `books/previews/${fileName}`;
+      }
+      if (files.full) {
+        const name = files.full[0].originalname.split('.')[0];
+        const ext = files.full[0].mimetype.split('/')[1];
+        const fileName = `${title}-full-${uuidv4()}_${name}.${ext}`;
+        const newPath = path.join(path.resolve(), 'public/books/fulls', fileName);
+        fs.renameSync(files.full[0].path, newPath);
+        bookFilesData.fullPDF = `books/fulls/${fileName}`;
+      }
+      if (files.audio) {
+        const name = files.audio[0].originalname.split('.')[0];
+        const ext = files.audio[0].mimetype.split('/')[1];
+        const fileName = `${title}-audio-${uuidv4()}_${name}.${ext}`;
+        const newPath = path.join(path.resolve(), 'public/books/audios', fileName);
+        fs.renameSync(files.audio[0].path, newPath);
+        bookFilesData.audio = `books/audios/${fileName}`;
       }
 
+      // transaction start
+      t = await sequelize.transaction();
+      // if  full or audio files exist, job should be done on the separate proccess
+      const newBook = await Books.create({
+        title,
+        price,
+        description,
+        language,
+        authorId,
+        new: brandNew,
+        popular,
+        bestseller,
+        status: 'unavailable',
+        audio: false,
+        coverImage: '',
+        publisherId: null,
+      }, { transaction: t });
+      if (!newBook) {
+        throw HttpError(400, 'unable to create book');
+      }
       await Promise.all(existingCategories.map(async (cat) => {
-        await BookCategories.create({ bookId: newBook.id, categoryId: cat.id });
+        await BookCategories.create({ bookId: newBook.id, categoryId: cat.id }, { transaction: t });
       }));
+      await BookFiles.create({ ...bookFilesData, bookId: newBook.id }, { transaction: t });
+      if (files.full) {
+        newBook.status = 'available';
+      } else {
+        newBook.status = 'upcoming';
+      }
+      if (files.audio) {
+        newBook.audio = true;
+      }
+      await newBook.save({ transaction: t });
+      // transaction end
+      if (t) {
+        await t.commit();
+      }
       res.status(201).json({
         code: res.statusCode,
         status: 'success',
         newBook,
       });
     } catch (er) {
+      if (t) {
+        await t.rollback();
+      }
       next(er);
     }
   };
 
-  static addFiles = async (req, res, next) => {
+  // separate worker
+  static edit = async (req, res, next) => {
+    let t = null;
     try {
       const { bookId } = req.params;
-      let book = await BookFiles.findByPk(bookId);
-      if (!book) {
-        book = await BookFiles.build({ bookId });
-      }
       const { files } = req;
-      if (files.previewPDF) {
-        book.previewPDF = path.join('/images/books', `${files.previewPDF[0].filename}`);
-        fs.renameSync(files.previewPDF[0].path, path.join(path.resolve(), 'public', '/images/books', `${files.previewPDF[0].filename}`));
-      }
-      if (files.fullPDF) {
-        book.fullPDF = path.join('/images/books', `${files.fullPDF[0].filename}`);
-        fs.renameSync(files.fullPDF[0].path, path.join(path.resolve(), 'public', '/images/books', `${files.fullPDF[0].filename}`));
-      }
-      await book.save();
 
+      const book = await Books.findByPk(bookId);
+      if (!book) {
+        throw HttpError(404, 'book was not found');
+      }
+      const {
+        title,
+        price,
+        description,
+        language,
+        authorId,
+        categories,
+        brandNew,
+        popular,
+        bestseller,
+      } = req.body;
+
+      let coverXS = '';
+      let coverS = '';
+      let coverM = '';
+      let coverL = '';
+      // previews files that should be deleted
+      let previewsCoverXS = '';
+      let previewsCoverS = '';
+      let previewsCoverM = '';
+      let previewsCoverL = '';
+      let previewsPreview = '';
+      let previewsFull = '';
+      let previewsAudio = '';
+      let existingCategories = [];
+
+      if (categories) {
+        existingCategories = await Categories.findAll(
+          { where: { id: { $in: [categories] } } },
+        );
+        if (!existingCategories.length) {
+          throw HttpError(400, 'invalid categories are provided');
+        }
+      }
+      if (authorId) {
+        const author = await Authors.findByPk(authorId);
+        if (!author) {
+          throw HttpError(404, 'author with the provided id does not exist ');
+        }
+      }
+
+      book.title = title || book.title;
+      book.price = price || book.price;
+      book.description = description || book.description;
+      book.language = language || book.language;
+      book.authorId = authorId || book.authorId;
+      book.brandNew = brandNew || book.brandNew;
+      book.popular = popular || book.popular;
+      book.bestseller = bestseller || book.bestseller;
+
+      // transaction start
+
+      t = await sequelize.transaction();
+      let bookFiles = await BookFiles.findOne({ where: { bookId } }, { transaction: t });
+      if (!bookFiles) {
+        bookFiles = await BookFiles.create({ bookId }, { transaction: t });
+      }
+      if (files) {
+        if (files.cover) {
+          if (bookFiles.coverXS) {
+            previewsCoverXS = path.join(path.resolve(), 'public', `${bookFiles.coverXS}`);
+          }
+          if (bookFiles.coverS) {
+            previewsCoverS = path.join(path.resolve(), 'public', `${bookFiles.coverS}`);
+          }
+          if (bookFiles.coverM) {
+            previewsCoverM = path.join(path.resolve(), 'public', `${bookFiles.coverM}`);
+          }
+          if (bookFiles.coverL) {
+            previewsCoverL = path.join(path.resolve(), 'public', `${bookFiles.coverL}`);
+          }
+          const name = files.cover[0].originalname.split('.')[0];
+          const fileName = `book-${title}-${uuidv4()}_${name}.jpg`;
+          // multer resizer
+          coverXS = `extra-small-${fileName}`;
+          coverS = `small-${fileName}`;
+          coverM = `medium-${fileName}`;
+          coverL = `large-${fileName}`;
+          const fullPath = path.join(path.resolve(), 'public/images/covers');
+
+          await sharp(files.cover[0].path)
+            .resize({ width: 110 })
+            .rotate()
+            .jpeg({
+              quality: 90,
+              mozjpeg: true,
+            })
+            .toFile(`${fullPath}/${coverXS}`);
+
+          await sharp(files.cover[0].path)
+            .resize({ width: 160 })
+            .rotate()
+            .jpeg({
+              quality: 90,
+              mozjpeg: true,
+            })
+            .toFile(`${fullPath}/${coverS}`);
+
+          await sharp(files.cover[0].path)
+            .resize({ width: 285 })
+            .rotate()
+            .jpeg({
+              quality: 90,
+              mozjpeg: true,
+            })
+            .toFile(`${fullPath}/${coverM}`);
+
+          await sharp(files.cover[0].path)
+            .resize({
+              width: 387,
+              fit: 'contain',
+            })
+            .rotate()
+            .jpeg({
+              quality: 90,
+              mozjpeg: true,
+            })
+            .trim()
+            .toFile(`${fullPath}/${coverL}`);
+          bookFiles.coverXS = `images/covers/${coverXS}`;
+          bookFiles.coverS = `images/covers/${coverS}`;
+          bookFiles.coverM = `images/covers/${coverM}`;
+          bookFiles.coverL = `images/covers/${coverL}`;
+        }
+        if (files.preview) {
+          if (bookFiles.preview) {
+            previewsPreview = path.join(path.resolve(), 'public', `${bookFiles.preview}`);
+          }
+          const name = files.preview[0].originalname.split('.')[0];
+          const ext = files.preview[0].mimetype.split('/')[1];
+          const fileName = `${title}-preview-${uuidv4()}_${name}.${ext}`;
+          const newPath = path.join(path.resolve(), 'public/books/previews', fileName);
+          fs.renameSync(files.preview[0].path, newPath);
+          bookFiles.previewPDF = `books/previews/${fileName}`;
+        }
+        if (files.full) {
+          book.status = 'available';
+          if (bookFiles.full) {
+            previewsFull = path.join(path.resolve(), 'public', `${bookFiles.full}`);
+          }
+          const name = files.full[0].originalname.split('.')[0];
+          const ext = files.full[0].mimetype.split('/')[1];
+          const fileName = `${title}-full-${uuidv4()}_${name}.${ext}`;
+          const newPath = path.join(path.resolve(), 'public/books/fulls', fileName);
+          fs.renameSync(files.full[0].path, newPath);
+          bookFiles.fullPDF = `books/fulls/${fileName}`;
+        }
+        if (files.audio) {
+          book.status = 'upcoming';
+          if (bookFiles.audio) {
+            previewsAudio = path.join(path.resolve(), 'public', `${bookFiles.audio}`);
+          }
+          const name = files.audio[0].originalname.split('.')[0];
+          const ext = files.audio[0].mimetype.split('/')[1];
+          const fileName = `${title}-audio-${uuidv4()}_${name}.${ext}`;
+          const newPath = path.join(path.resolve(), 'public/books/audios', fileName);
+          fs.renameSync(files.audio[0].path, newPath);
+          bookFiles.audio = `books/audios/${fileName}`;
+        }
+      }
+
+      await Promise.all(existingCategories.map(async (cat) => {
+        const bookCategory = await BookCategories
+          .findOne({ where: { bookId: book.id, categoryId: cat.id } }, { transaction: t });
+        if (!bookCategory) {
+          await BookCategories.create(
+            { bookId: book.id, categoryId: cat.id },
+            { transaction: t },
+          );
+        }
+      }));
+      await bookFiles.save({ transaction: t });
+      await book.save({ transaction: t });
+      fileRemover(previewsCoverXS);
+      fileRemover(previewsCoverS);
+      fileRemover(previewsCoverM);
+      fileRemover(previewsCoverL);
+      fileRemover(previewsPreview);
+      fileRemover(previewsFull);
+      fileRemover(previewsAudio);
+      if (t) {
+        await t.commit();
+      }
       res.status(201).json({
         code: res.statusCode,
         status: 'success',
         book,
       });
     } catch (er) {
+      if (t) {
+        await t.rollback();
+      }
       next(er);
     }
   };

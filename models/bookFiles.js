@@ -30,5 +30,5 @@ BookFiles.init(
 
 export default BookFiles;
 
-BookFiles.belongsTo(Books, { foreignKey: 'bookId' });
+BookFiles.belongsTo(Books, { foreignKey: 'bookId', onDelete: 'CASCADE' });
 Books.hasOne(BookFiles, { foreignKey: 'bookId', as: 'bookFiles' });
