@@ -41,12 +41,12 @@ const filesUploaderV2 = (req, res, next) => {
       if (files.audio && !files.audio[0].mimetype.startsWith('audio')) {
         throw HttpError(400, 'invalid file type for audio, please upload only audio files');
       }
-      if (er?.code === 'LIMIT_FILE_COUNT') {
+      if (er?.code === 'LIMIT_FILE_COUNT'
+        || er?.code === 'LIMIT_UNEXPECTED_FILE'
+      ) {
         throw HttpError(409, er.message);
       }
-      if (er?.code === 'LIMIT_UNEXPECTED_FILE') {
-        throw HttpError(409, er.message);
-      }
+
       if (er instanceof multer.MulterError) {
         throw HttpError(400);
       }

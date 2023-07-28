@@ -8,6 +8,8 @@ import fileRemover from '../helpers/fileRemover';
 import imageResizer from '../helpers/imageResizer';
 import fileNameDefiner from '../helpers/fileNameDefiner';
 
+const { IMAGE_MAX_SIZE, PREVIEW_MAX_SIZE } = process.env;
+
 class BooksController {
   static list = async (req, res, next) => {
     try {
@@ -380,6 +382,13 @@ class BooksController {
       const bookFilesData = {};
       const workerFilesData = {};
 
+      if (files.cover && files.cover[0].size > IMAGE_MAX_SIZE) {
+        throw HttpError(413);
+      }
+      if (files.preview && files.preview[0] > PREVIEW_MAX_SIZE) {
+        throw HttpError(413);
+      }
+
       const existingCategories = await Categories.findAll({ where: { id: { $in: [categories] } } });
       if (!existingCategories.length) {
         throw HttpError(400, 'invalid categories are provided');
@@ -657,6 +666,26 @@ class BooksController {
       res.status(204).json(
         { status: 'success' },
       );
+    } catch (er) {
+      next(er);
+    }
+  };
+
+  // public
+  static preview = async (req, res, next) => {
+    try {
+      const { bookId } = req.params;
+      const book = await BookFiles.findOne({ where: { bookId } });
+      console.log(book);
+      if (!book || !book.previewPDF) {
+        throw HttpError(404, 'book preview file was not found');
+      }
+      const file = path.join(path.resolve(), 'public', book.previewPDF);
+      if (!fs.existsSync(file)) {
+        throw HttpError(404, 'book preview file was not found');
+      }
+      // res.setHeader('Content-Type', '')
+      res.sendFile(file);
     } catch (er) {
       next(er);
     }

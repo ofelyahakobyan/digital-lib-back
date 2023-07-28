@@ -12,11 +12,12 @@ const EXCLUDE = [
   `GET:${BASE_URL}/authors`,
 ];
 const EXCLUDE_VAR = [
-  `GET:${BASE_URL}/books/single`,
+  // `GET:${BASE_URL}/books/single`,
   `GET:${BASE_URL}/authors/single`,
   `GET:${BASE_URL}/books/reviews`,
-  `GET:${BASE_URL}/books/author`,
-  `GET:${BASE_URL}/books/category`,
+  // `GET:${BASE_URL}/books/author`,
+  // `GET:${BASE_URL}/books/category`,
+  `GET:${BASE_URL}/books`,
   'GET:/images',
 ];
 const authorization = (req, res, next) => {

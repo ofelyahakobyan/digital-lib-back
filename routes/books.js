@@ -12,9 +12,14 @@ router.get('/', validate(books.list), BooksController.list);
 router.get('/author/:authorId', validate(books.authorList), BooksController.authorList);
 router.get('/category/:categoryId', validate(books.categoryList), BooksController.categoryList);
 router.get('/single/:bookId', validate(books.single), BooksController.single);
-router.get('/reviews/:bookId', validate(reviews.bookList), ReviewsController.bookList);
+router.get('/:bookId/reviews', validate(reviews.bookList), ReviewsController.bookList);
 router.post('/add', bookUploader, validate(books.add), BooksController.add);
-router.patch('/:bookId', bookUploader, validate(books.edit), BooksController.edit);
-router.delete('/:bookId', bookUploader, validate(books.delete), BooksController.delete);
+router.patch('/:bookId', bookUploader, validate(books.single), BooksController.edit);
+router.delete('/:bookId', validate(books.single), BooksController.delete);
+router.get('/:bookId/preview', validate(books.single), BooksController.preview);
+
+// logged-in user endpoints
+// router.get('/:bookId/full', validate(books.single), BooksController.preview);
+// router.get('/:bookId/audio', validate(books.single), BooksController.preview);
 
 export default router;
