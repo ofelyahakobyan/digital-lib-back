@@ -360,7 +360,8 @@ class BooksController {
     }
   };
 
-  // separate worker
+  //  admin
+  //  separate worker
   static add = async (req, res, next) => {
     let t = null;
     try {
@@ -401,7 +402,6 @@ class BooksController {
         bestseller,
         status: 'unavailable',
         audio: false,
-        coverImage: '',
         publisherId: null,
       }, { transaction: t });
       if (!newBook) {
@@ -476,7 +476,8 @@ class BooksController {
     }
   };
 
-  // separate worker
+  // admin
+  // TODO separate worker
   static edit = async (req, res, next) => {
     let t = null;
     try {
@@ -629,6 +630,34 @@ class BooksController {
       if (t) {
         await t.rollback();
       }
+      next(er);
+    }
+  };
+
+  // admin
+  static delete = async (req, res, next) => {
+    try {
+      const { bookId } = req.params;
+      const book = await Books.findByPk(bookId);
+      if (!book) {
+        throw HttpError(404, 'book with the provided Id does not exist');
+      }
+      const bookFiles = await BookFiles.findOne({ where: { bookId: book.id } });
+      if (bookFiles) {
+        const filePath = path.join(path.resolve(), 'public');
+        fileRemover(`${filePath}/${bookFiles.coverXS}`);
+        fileRemover(`${filePath}/${bookFiles.coverS}`);
+        fileRemover(`${filePath}/${bookFiles.coverM}`);
+        fileRemover(`${filePath}/${bookFiles.coverL}`);
+        fileRemover(`${filePath}/${bookFiles.fullPDF}`);
+        fileRemover(`${filePath}/${bookFiles.previewPDF}`);
+        fileRemover(`${filePath}/${bookFiles.audio}`);
+      }
+      await book.destroy();
+      res.status(204).json(
+        { status: 'success' },
+      );
+    } catch (er) {
       next(er);
     }
   };

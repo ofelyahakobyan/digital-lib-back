@@ -14,6 +14,7 @@ router.get('/category/:categoryId', validate(books.categoryList), BooksControlle
 router.get('/single/:bookId', validate(books.single), BooksController.single);
 router.get('/reviews/:bookId', validate(reviews.bookList), ReviewsController.bookList);
 router.post('/add', bookUploader, validate(books.add), BooksController.add);
-router.patch('/edit/:bookId', bookUploader, validate(books.edit), BooksController.edit);
+router.patch('/:bookId', bookUploader, validate(books.edit), BooksController.edit);
+router.delete('/:bookId', bookUploader, validate(books.delete), BooksController.delete);
 
 export default router;

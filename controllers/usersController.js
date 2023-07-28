@@ -1,7 +1,6 @@
 import HttpError from 'http-errors';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
-import fs from 'fs';
 import path from 'path';
 import sharp from 'sharp';
 import hash from '../helpers/hash';
@@ -183,12 +182,8 @@ class UsersController {
         throw HttpError(404, 'the provided userId is invalid');
       }
       if (user.avatar) {
-        const filePath = path.join(path.resolve(), 'public/api/v1/', `${user.avatar}`);
-        setImmediate(() => {
-          if (fs.existsSync(filePath)) {
-            fs.unlinkSync(filePath);
-          }
-        });
+        const filePath = path.join(path.resolve(), 'public', `${user.avatar}`);
+        fileRemover(filePath);
       }
       // also user's credit-cards should be deleted
       await user.destroy();
