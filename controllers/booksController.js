@@ -1,7 +1,7 @@
 import HttpError from 'http-errors';
 import path from 'path';
 import fs from 'fs';
-// import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
+import { Worker, isMainThread } from 'node:worker_threads';
 import sequelize from '../services/sequelize';
 import { Books, Authors, Categories, Reviews, BookCategories, BookFiles } from '../models';
 import fileRemover from '../helpers/fileRemover';
@@ -377,7 +377,8 @@ class BooksController {
       } = req.body;
       const { files } = req;
       const bookFilesData = {};
-      console.log(files);
+      const workerFilesData = {};
+
       const existingCategories = await Categories.findAll({ where: { id: { $in: [categories] } } });
       if (!existingCategories.length) {
         throw HttpError(400, 'invalid categories are provided');
@@ -387,40 +388,8 @@ class BooksController {
         throw HttpError(404, 'author with the provided id does not exist ');
       }
 
-      if (files.cover) {
-        const fileName = fileNameDefiner(files.cover[0], title, 'cover');
-        const fullPath = path.join(path.resolve(), 'public/images/covers');
-        await imageResizer(files.cover[0].path, { width: 110 }, `${fullPath}/XS-${fileName}`);
-        await imageResizer(files.cover[0].path, { width: 160 }, `${fullPath}/S-${fileName}`);
-        await imageResizer(files.cover[0].path, { width: 285 }, `${fullPath}/M-${fileName}`);
-        await imageResizer(files.cover[0].path, { width: 387, fit: 'contain' }, `${fullPath}/L-${fileName}`);
-
-        bookFilesData.coverXS = `images/covers/XS-${fileName}`;
-        bookFilesData.coverS = `images/covers/S-${fileName}`;
-        bookFilesData.coverM = `images/covers/M-${fileName}`;
-        bookFilesData.coverL = `images/covers/L-${fileName}`;
-      }
-      if (files.preview) {
-        const fileName = fileNameDefiner(files.preview[0], title, 'preview');
-        const newPath = path.join(path.resolve(), 'public/books/previews', fileName);
-        fs.renameSync(files.preview[0].path, newPath);
-        bookFilesData.previewPDF = `books/previews/${fileName}`;
-      }
-      if (files.full) {
-        const fileName = fileNameDefiner(files.full[0], title, 'full');
-        const newPath = path.join(path.resolve(), 'public/books/fulls', fileName);
-        fs.renameSync(files.full[0].path, newPath);
-        bookFilesData.fullPDF = `books/fulls/${fileName}`;
-      }
-      if (files.audio) {
-        const fileName = fileNameDefiner(files.audio[0], title, 'audio');
-        const newPath = path.join(path.resolve(), 'public/books/audios', fileName);
-        fs.renameSync(files.audio[0].path, newPath);
-        bookFilesData.audio = `books/audios/${fileName}`;
-      }
       // transaction start
       t = await sequelize.transaction();
-      // if  full or audio files exist, job should be done on the separate proccess
       const newBook = await Books.create({
         title,
         price,
@@ -441,20 +410,59 @@ class BooksController {
       await Promise.all(existingCategories.map(async (cat) => {
         await BookCategories.create({ bookId: newBook.id, categoryId: cat.id }, { transaction: t });
       }));
-      await BookFiles.create({ ...bookFilesData, bookId: newBook.id }, { transaction: t });
+
+      if (files.cover) {
+        const fileName = fileNameDefiner(files.cover[0], title, 'cover');
+        bookFilesData.coverXS = `images/covers/XS-${fileName}`;
+        bookFilesData.coverS = `images/covers/S-${fileName}`;
+        bookFilesData.coverM = `images/covers/M-${fileName}`;
+        bookFilesData.coverL = `images/covers/L-${fileName}`;
+
+        workerFilesData.cover = fileName;
+      }
+      if (files.preview) {
+        const fileName = fileNameDefiner(files.preview[0], title, 'preview');
+        bookFilesData.previewPDF = `books/previews/${fileName}`;
+        workerFilesData.preview = fileName;
+      }
       if (files.full) {
         newBook.status = 'available';
+        const fileName = fileNameDefiner(files.full[0], title, 'full');
+        bookFilesData.fullPDF = `books/fulls/${fileName}`;
+        workerFilesData.full = fileName;
       } else {
         newBook.status = 'upcoming';
       }
       if (files.audio) {
         newBook.audio = true;
+        const fileName = fileNameDefiner(files.audio[0], title, 'audio');
+        bookFilesData.audio = `books/audios/${fileName}`;
+        workerFilesData.audio = fileName;
       }
+
+      if (isMainThread) {
+        const workerFile = path.join(path.resolve(), '/services/bookUploadWorker.js');
+        const worker = new Worker(workerFile, {
+          workerData: {
+            files,
+            title,
+            workerFilesData,
+          },
+        });
+        worker.on('message', (msg) => {
+          if (msg.error) {
+            console.log(msg.message);
+            // here should be logic for the case an error has happened in the worker file
+          }
+        });
+      }
+      await BookFiles.create({ ...bookFilesData, bookId: newBook.id }, { transaction: t });
       await newBook.save({ transaction: t });
       // transaction end
       if (t) {
         await t.commit();
       }
+      // worker from here
       res.status(201).json({
         code: res.statusCode,
         status: 'success',

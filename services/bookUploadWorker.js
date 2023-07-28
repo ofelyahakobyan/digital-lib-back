@@ -1,63 +1,39 @@
-// import { parentPort } from 'node:worker_threads';
-// import { v4 as uuidv4 } from 'uuid';
-// import path from 'path';
-// import fs from 'fs';
-// import HttpError from 'http-errors';
-// import sequelize from './sequelize';
-// import { BookCategories, BookFiles, Books } from '../models/index';
-//
-// if (files.full) {
-//   const name = files.full[0].originalname.split('.')[0];
-//   const ext = files.full[0].mimetype.split('/')[1];
-//   const fileName = `${title}-full-${uuidv4()}_${name}.${ext}`;
-//   const newPath = path.join(path.resolve(), 'public/books/fulls', fileName);
-//   fs.renameSync(files.full[0].path, newPath);
-//   bookFilesData.fullPDF = `books/fulls/${fileName}`;
-// }
-// if (files.audio) {
-//   const name = files.audio[0].originalname.split('.')[0];
-//   const ext = files.audio[0].mimetype.split('/')[1];
-//   const fileName = `${title}-audio-${uuidv4()}_${name}.${ext}`;
-//   const newPath = path.join(path.resolve(), 'public/books/audios', fileName);
-//   fs.renameSync(files.audio[0].path, newPath);
-//   bookFilesData.audio = `books/audios/${fileName}`;
-// }
-//
-// // transaction start
-// t = await sequelize.transaction();
-// // if  full or audio files exist, job should be done on the separate proccess
-// const newBook = await Books.create({
-//   title,
-//   price,
-//   description,
-//   language,
-//   authorId,
-//   new: brandNew,
-//   popular,
-//   bestseller,
-//   status: 'unavailable',
-//   audio: false,
-//   coverImage: '',
-//   publisherId: null,
-// }, { transaction: t });
-// if (!newBook) {
-//   throw HttpError(400, 'unable to create book');
-// }
-// await Promise.all(existingCategories.map(async (cat) => {
-//   await BookCategories.create({ bookId: newBook.id, categoryId: cat.id }, { transaction: t });
-// }));
-// await BookFiles.create({ ...bookFilesData, bookId: newBook.id }, { transaction: t });
-// if (files.full) {
-//   newBook.status = 'available';
-// } else {
-//   newBook.status = 'upcoming';
-// }
-// if (files.audio) {
-//   newBook.audio = true;
-// }
-// await newBook.save({ transaction: t });
-// // transaction end
-// if (t) {
-//   await t.commit();
-// }
-// parentPort.postMessage('hello');
+import { parentPort, workerData } from 'node:worker_threads';
+import path from 'path';
+import fs from 'fs';
+import imageResizer from '../helpers/imageResizer';
+
+const processFiles = async () => {
+  try {
+    const { files, workerFilesData } = workerData;
+    const { cover, preview, full, audio } = workerFilesData;
+
+    if (files.cover) {
+      const fullPath = path.join(path.resolve(), 'public/images/covers');
+      await imageResizer(files.cover[0].path, { width: 110 }, `${fullPath}/XS-${cover}`);
+      await imageResizer(files.cover[0].path, { width: 160 }, `${fullPath}/S-${cover}`);
+      await imageResizer(files.cover[0].path, { width: 285 }, `${fullPath}/M-${cover}`);
+      await imageResizer(files.cover[0].path, { width: 387, fit: 'contain' }, `${fullPath}/L-${cover}`);
+    }
+    if (files.preview) {
+      const newPath = path.join(path.resolve(), 'public/books/previews', preview);
+      fs.renameSync(files.preview[0].path, newPath);
+    }
+    if (files.full) {
+      const newPath = path.join(path.resolve(), 'public/books/fulls', full);
+      fs.renameSync(files.full[0].path, newPath);
+    }
+    if (files.audio) {
+      const newPath = path.join(path.resolve(), 'public/books/audios', audio);
+      fs.renameSync(files.audio[0].path, newPath);
+    }
+    parentPort.postMessage('done');
+  } catch (er) {
+    parentPort.postMessage({
+      error: true,
+      message: er.message,
+    });
+  }
+};
+
+await processFiles();
