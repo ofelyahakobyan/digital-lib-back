@@ -1,12 +1,12 @@
 import HttpError from 'http-errors';
-import { v4 as uuidv4 } from 'uuid';
 import path from 'path';
 import fs from 'fs';
-import sharp from 'sharp';
-import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
+// import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
 import sequelize from '../services/sequelize';
 import { Books, Authors, Categories, Reviews, BookCategories, BookFiles } from '../models';
 import fileRemover from '../helpers/fileRemover';
+import imageResizer from '../helpers/imageResizer';
+import fileNameDefiner from '../helpers/fileNameDefiner';
 
 class BooksController {
   static list = async (req, res, next) => {
@@ -375,14 +375,9 @@ class BooksController {
         popular = false,
         bestseller = false,
       } = req.body;
-      let coverXS = '';
-      let coverS = '';
-      let coverM = '';
-      let coverL = '';
-      const bookFilesData = {};
-
       const { files } = req;
-
+      const bookFilesData = {};
+      console.log(files);
       const existingCategories = await Categories.findAll({ where: { id: { $in: [categories] } } });
       if (!existingCategories.length) {
         throw HttpError(400, 'invalid categories are provided');
@@ -393,83 +388,36 @@ class BooksController {
       }
 
       if (files.cover) {
-        const name = files.cover[0].originalname.split('.')[0];
-        const fileName = `book-${title}-${uuidv4()}_${name}.jpg`;
-        // multer resizer
-        coverXS = `extra-small-${fileName}`;
-        coverS = `small-${fileName}`;
-        coverM = `medium-${fileName}`;
-        coverL = `large-${fileName}`;
+        const fileName = fileNameDefiner(files.cover[0], title, 'cover');
         const fullPath = path.join(path.resolve(), 'public/images/covers');
-        await sharp(files.cover[0].path)
-          .resize({ width: 110 })
-          .rotate()
-          .jpeg({
-            quality: 90,
-            mozjpeg: true,
-          })
-          .toFile(`${fullPath}/${coverXS}`);
+        await imageResizer(files.cover[0].path, { width: 110 }, `${fullPath}/XS-${fileName}`);
+        await imageResizer(files.cover[0].path, { width: 160 }, `${fullPath}/S-${fileName}`);
+        await imageResizer(files.cover[0].path, { width: 285 }, `${fullPath}/M-${fileName}`);
+        await imageResizer(files.cover[0].path, { width: 387, fit: 'contain' }, `${fullPath}/L-${fileName}`);
 
-        await sharp(files.cover[0].path)
-          .resize({ width: 160 })
-          .rotate()
-          .jpeg({
-            quality: 90,
-            mozjpeg: true,
-          })
-          .toFile(`${fullPath}/${coverS}`);
-
-        await sharp(files.cover[0].path)
-          .resize({ width: 285 })
-          .rotate()
-          .jpeg({
-            quality: 90,
-            mozjpeg: true,
-          })
-          .toFile(`${fullPath}/${coverM}`);
-
-        await sharp(files.cover[0].path)
-          .resize({
-            width: 387,
-            fit: 'contain',
-          })
-          .rotate()
-          .jpeg({
-            quality: 90,
-            mozjpeg: true,
-          })
-          .trim()
-          .toFile(`${fullPath}/${coverL}`);
-        bookFilesData.coverXS = `images/covers/${coverXS}`;
-        bookFilesData.coverS = `images/covers/${coverS}`;
-        bookFilesData.coverM = `images/covers/${coverM}`;
-        bookFilesData.coverL = `images/covers/${coverL}`;
+        bookFilesData.coverXS = `images/covers/XS-${fileName}`;
+        bookFilesData.coverS = `images/covers/S-${fileName}`;
+        bookFilesData.coverM = `images/covers/M-${fileName}`;
+        bookFilesData.coverL = `images/covers/L-${fileName}`;
       }
       if (files.preview) {
-        const name = files.preview[0].originalname.split('.')[0];
-        const ext = files.preview[0].mimetype.split('/')[1];
-        const fileName = `${title}-preview-${uuidv4()}_${name}.${ext}`;
+        const fileName = fileNameDefiner(files.preview[0], title, 'preview');
         const newPath = path.join(path.resolve(), 'public/books/previews', fileName);
         fs.renameSync(files.preview[0].path, newPath);
         bookFilesData.previewPDF = `books/previews/${fileName}`;
       }
       if (files.full) {
-        const name = files.full[0].originalname.split('.')[0];
-        const ext = files.full[0].mimetype.split('/')[1];
-        const fileName = `${title}-full-${uuidv4()}_${name}.${ext}`;
+        const fileName = fileNameDefiner(files.full[0], title, 'full');
         const newPath = path.join(path.resolve(), 'public/books/fulls', fileName);
         fs.renameSync(files.full[0].path, newPath);
         bookFilesData.fullPDF = `books/fulls/${fileName}`;
       }
       if (files.audio) {
-        const name = files.audio[0].originalname.split('.')[0];
-        const ext = files.audio[0].mimetype.split('/')[1];
-        const fileName = `${title}-audio-${uuidv4()}_${name}.${ext}`;
+        const fileName = fileNameDefiner(files.audio[0], title, 'audio');
         const newPath = path.join(path.resolve(), 'public/books/audios', fileName);
         fs.renameSync(files.audio[0].path, newPath);
         bookFilesData.audio = `books/audios/${fileName}`;
       }
-
       // transaction start
       t = await sequelize.transaction();
       // if  full or audio files exist, job should be done on the separate proccess
@@ -543,10 +491,6 @@ class BooksController {
         bestseller,
       } = req.body;
 
-      let coverXS = '';
-      let coverS = '';
-      let coverM = '';
-      let coverL = '';
       // previews files that should be deleted
       let previewsCoverXS = '';
       let previewsCoverS = '';
@@ -582,7 +526,6 @@ class BooksController {
       book.bestseller = bestseller || book.bestseller;
 
       // transaction start
-
       t = await sequelize.transaction();
       let bookFiles = await BookFiles.findOne({ where: { bookId } }, { transaction: t });
       if (!bookFiles) {
@@ -602,66 +545,25 @@ class BooksController {
           if (bookFiles.coverL) {
             previewsCoverL = path.join(path.resolve(), 'public', `${bookFiles.coverL}`);
           }
-          const name = files.cover[0].originalname.split('.')[0];
-          const fileName = `book-${title}-${uuidv4()}_${name}.jpg`;
+          const fileName = fileNameDefiner(files.cover[0], book.title, 'cover');
           // multer resizer
-          coverXS = `extra-small-${fileName}`;
-          coverS = `small-${fileName}`;
-          coverM = `medium-${fileName}`;
-          coverL = `large-${fileName}`;
           const fullPath = path.join(path.resolve(), 'public/images/covers');
 
-          await sharp(files.cover[0].path)
-            .resize({ width: 110 })
-            .rotate()
-            .jpeg({
-              quality: 90,
-              mozjpeg: true,
-            })
-            .toFile(`${fullPath}/${coverXS}`);
+          await imageResizer(files.cover[0].path, { width: 110 }, `${fullPath}/XS-${fileName}`);
+          await imageResizer(files.cover[0].path, { width: 160 }, `${fullPath}/S-${fileName}`);
+          await imageResizer(files.cover[0].path, { width: 285 }, `${fullPath}/S-${fileName}`);
+          await imageResizer(files.cover[0].path, { width: 387, fit: 'contain' }, `${fullPath}/S-${fileName}`);
 
-          await sharp(files.cover[0].path)
-            .resize({ width: 160 })
-            .rotate()
-            .jpeg({
-              quality: 90,
-              mozjpeg: true,
-            })
-            .toFile(`${fullPath}/${coverS}`);
-
-          await sharp(files.cover[0].path)
-            .resize({ width: 285 })
-            .rotate()
-            .jpeg({
-              quality: 90,
-              mozjpeg: true,
-            })
-            .toFile(`${fullPath}/${coverM}`);
-
-          await sharp(files.cover[0].path)
-            .resize({
-              width: 387,
-              fit: 'contain',
-            })
-            .rotate()
-            .jpeg({
-              quality: 90,
-              mozjpeg: true,
-            })
-            .trim()
-            .toFile(`${fullPath}/${coverL}`);
-          bookFiles.coverXS = `images/covers/${coverXS}`;
-          bookFiles.coverS = `images/covers/${coverS}`;
-          bookFiles.coverM = `images/covers/${coverM}`;
-          bookFiles.coverL = `images/covers/${coverL}`;
+          bookFiles.coverXS = `images/covers/XS-${fileName}`;
+          bookFiles.coverS = `images/covers/S-${fileName}`;
+          bookFiles.coverM = `images/covers/M-${fileName}`;
+          bookFiles.coverL = `images/covers/L-${fileName}`;
         }
         if (files.preview) {
           if (bookFiles.preview) {
             previewsPreview = path.join(path.resolve(), 'public', `${bookFiles.preview}`);
           }
-          const name = files.preview[0].originalname.split('.')[0];
-          const ext = files.preview[0].mimetype.split('/')[1];
-          const fileName = `${title}-preview-${uuidv4()}_${name}.${ext}`;
+          const fileName = fileNameDefiner(files.preview[0], book.title, 'preview');
           const newPath = path.join(path.resolve(), 'public/books/previews', fileName);
           fs.renameSync(files.preview[0].path, newPath);
           bookFiles.previewPDF = `books/previews/${fileName}`;
@@ -671,9 +573,7 @@ class BooksController {
           if (bookFiles.full) {
             previewsFull = path.join(path.resolve(), 'public', `${bookFiles.full}`);
           }
-          const name = files.full[0].originalname.split('.')[0];
-          const ext = files.full[0].mimetype.split('/')[1];
-          const fileName = `${title}-full-${uuidv4()}_${name}.${ext}`;
+          const fileName = fileNameDefiner(files.full[0], book.title, 'full');
           const newPath = path.join(path.resolve(), 'public/books/fulls', fileName);
           fs.renameSync(files.full[0].path, newPath);
           bookFiles.fullPDF = `books/fulls/${fileName}`;
@@ -683,9 +583,7 @@ class BooksController {
           if (bookFiles.audio) {
             previewsAudio = path.join(path.resolve(), 'public', `${bookFiles.audio}`);
           }
-          const name = files.audio[0].originalname.split('.')[0];
-          const ext = files.audio[0].mimetype.split('/')[1];
-          const fileName = `${title}-audio-${uuidv4()}_${name}.${ext}`;
+          const fileName = fileNameDefiner(files.audio[0], book.title, 'audio');
           const newPath = path.join(path.resolve(), 'public/books/audios', fileName);
           fs.renameSync(files.audio[0].path, newPath);
           bookFiles.audio = `books/audios/${fileName}`;
