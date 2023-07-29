@@ -1,6 +1,6 @@
 import express from 'express';
 import authorsController from '../controllers/authorsController';
-import authorUploader from '../middlewares/authorAvatarUploader';
+import uploader from '../middlewares/avatarUploader';
 import validate from '../middlewares/validate';
 import authors from '../schemas/authors';
 
@@ -11,8 +11,8 @@ router.get('/', validate(authors.list), authorsController.list);
 // public
 router.get('/single/:authorId', validate(authors.single), authorsController.single);
 // admin
-router.post('/add', authorUploader, validate(authors.add), authorsController.add);
+router.post('/add', uploader, validate(authors.add), authorsController.add);
 // admin
-router.patch('/edit/:authorId', authorUploader, validate(authors.edit), authorsController.edit);
+router.patch('/edit/:authorId', uploader, validate(authors.edit), authorsController.edit);
 
 export default router;

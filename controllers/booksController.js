@@ -5,7 +5,6 @@ import { Worker, isMainThread } from 'node:worker_threads';
 import sequelize from '../services/sequelize';
 import { Books, Authors, Categories, Reviews, BookCategories, BookFiles } from '../models';
 import fileRemover from '../helpers/fileRemover';
-import imageResizer from '../helpers/imageResizer';
 import fileNameDefiner from '../helpers/fileNameDefiner';
 
 const { IMAGE_MAX_SIZE, PREVIEW_MAX_SIZE } = process.env;
@@ -383,13 +382,13 @@ class BooksController {
       const workerFilesData = {};
 
       if (files.cover && files.cover[0].size > IMAGE_MAX_SIZE) {
-        throw HttpError(413);
+        throw HttpError(413, 'cover image is too large');
       }
       if (files.preview && files.preview[0] > PREVIEW_MAX_SIZE) {
-        throw HttpError(413);
+        throw HttpError(413, 'preview pdf file is too large');
       }
 
-      const existingCategories = await Categories.findAll({ where: { id: { $in: [categories] } } });
+      const existingCategories = await Categories.findAll({ where: { id: { $or: [categories] } } });
       if (!existingCategories.length) {
         throw HttpError(400, 'invalid categories are provided');
       }
@@ -521,7 +520,7 @@ class BooksController {
 
       if (categories) {
         existingCategories = await Categories.findAll(
-          { where: { id: { $in: [categories] } } },
+          { where: { id: { $or: [categories] } } },
         );
         if (!existingCategories.length) {
           throw HttpError(400, 'invalid categories are provided');
@@ -549,6 +548,7 @@ class BooksController {
       if (!bookFiles) {
         bookFiles = await BookFiles.create({ bookId }, { transaction: t });
       }
+      // worker take the bookFiles and files
       if (files) {
         if (files.cover) {
           if (bookFiles.coverXS) {
@@ -564,22 +564,30 @@ class BooksController {
             previewsCoverL = path.join(path.resolve(), 'public', `${bookFiles.coverL}`);
           }
           const fileName = fileNameDefiner(files.cover[0], book.title, 'cover');
-          // multer resizer
-          const fullPath = path.join(path.resolve(), 'public/images/covers');
-
-          await imageResizer(files.cover[0].path, { width: 110 }, `${fullPath}/XS-${fileName}`);
-          await imageResizer(files.cover[0].path, { width: 160 }, `${fullPath}/S-${fileName}`);
-          await imageResizer(files.cover[0].path, { width: 285 }, `${fullPath}/S-${fileName}`);
-          await imageResizer(files.cover[0].path, { width: 387, fit: 'contain' }, `${fullPath}/S-${fileName}`);
-
+          // image resizing
+          if (isMainThread) {
+            const workerFile = path.join(path.resolve(), '/services/bookEditWorker.js');
+            const worker = new Worker(workerFile, {
+              workerData: {
+                files,
+                fileName,
+              },
+            });
+            worker.on('message', (msg) => {
+              if (msg.error) {
+                console.log(msg.message);
+                // here should be logic for the case an error has happened in the worker file
+              }
+            });
+          }
           bookFiles.coverXS = `images/covers/XS-${fileName}`;
           bookFiles.coverS = `images/covers/S-${fileName}`;
           bookFiles.coverM = `images/covers/M-${fileName}`;
           bookFiles.coverL = `images/covers/L-${fileName}`;
         }
         if (files.preview) {
-          if (bookFiles.preview) {
-            previewsPreview = path.join(path.resolve(), 'public', `${bookFiles.preview}`);
+          if (bookFiles.previewPDF) {
+            previewsPreview = path.join(path.resolve(), 'public', `${bookFiles.previewPDF}`);
           }
           const fileName = fileNameDefiner(files.preview[0], book.title, 'preview');
           const newPath = path.join(path.resolve(), 'public/books/previews', fileName);
@@ -588,8 +596,8 @@ class BooksController {
         }
         if (files.full) {
           book.status = 'available';
-          if (bookFiles.full) {
-            previewsFull = path.join(path.resolve(), 'public', `${bookFiles.full}`);
+          if (bookFiles.fullPDF) {
+            previewsFull = path.join(path.resolve(), 'public', `${bookFiles.fullPDF}`);
           }
           const fileName = fileNameDefiner(files.full[0], book.title, 'full');
           const newPath = path.join(path.resolve(), 'public/books/fulls', fileName);
@@ -598,6 +606,7 @@ class BooksController {
         }
         if (files.audio) {
           book.status = 'upcoming';
+          book.audio = 'true';
           if (bookFiles.audio) {
             previewsAudio = path.join(path.resolve(), 'public', `${bookFiles.audio}`);
           }

@@ -2,9 +2,10 @@ import multer from 'multer';
 import HttpError from 'http-errors';
 import _ from 'lodash';
 
+const { IMAGE_MAX_SIZE } = process.env;
 const storage = multer.memoryStorage();
 const limits = {
-  fileSize: 5 * 1024 * 1024,
+  fileSize: IMAGE_MAX_SIZE,
   files: 1,
 };
 
@@ -13,7 +14,7 @@ const upload = multer({
   limits,
 }).single('avatar');
 
-const avatarUploader = (req, res, next) => {
+const uploader = (req, res, next) => {
   upload(req, res, (er) => {
     try {
       const { file } = req;
@@ -41,4 +42,4 @@ const avatarUploader = (req, res, next) => {
     }
   });
 };
-export default avatarUploader;
+export default uploader;
