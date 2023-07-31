@@ -3,11 +3,17 @@ import path from 'path';
 import fs from 'fs';
 import { Worker, isMainThread } from 'node:worker_threads';
 import sequelize from '../services/sequelize';
-import { Books, Authors, Categories, Reviews, BookCategories, BookFiles } from '../models';
+import {
+  Books,
+  Authors,
+  Categories,
+  Reviews,
+  BookCategories,
+  BookFiles,
+  UserBooks,
+} from '../models';
 import fileRemover from '../helpers/fileRemover';
 import fileNameDefiner from '../helpers/fileNameDefiner';
-
-const { IMAGE_MAX_SIZE, PREVIEW_MAX_SIZE } = process.env;
 
 class BooksController {
   static list = async (req, res, next) => {
@@ -381,10 +387,10 @@ class BooksController {
       const bookFilesData = {};
       const workerFilesData = {};
 
-      if (files.cover && files.cover[0].size > IMAGE_MAX_SIZE) {
+      if (files.cover && files.cover[0].size > 5 * 1024 * 1024) {
         throw HttpError(413, 'cover image is too large');
       }
-      if (files.preview && files.preview[0] > PREVIEW_MAX_SIZE) {
+      if (files.preview && files.preview[0] > 25 * 1024 * 1024) {
         throw HttpError(413, 'preview pdf file is too large');
       }
 
@@ -485,7 +491,6 @@ class BooksController {
   };
 
   // admin
-  // TODO separate worker
   static edit = async (req, res, next) => {
     let t = null;
     try {
@@ -684,17 +689,94 @@ class BooksController {
   static preview = async (req, res, next) => {
     try {
       const { bookId } = req.params;
-      const book = await BookFiles.findOne({ where: { bookId } });
-      console.log(book);
-      if (!book || !book.previewPDF) {
+      const book = await Books.findByPk(bookId);
+      const bookFiles = await BookFiles.findOne({ where: { bookId } });
+      if (!book || !bookFiles || !bookFiles.previewPDF) {
         throw HttpError(404, 'book preview file was not found');
       }
-      const file = path.join(path.resolve(), 'public', book.previewPDF);
+
+      const file = path.join(path.resolve(), 'public', bookFiles.previewPDF);
       if (!fs.existsSync(file)) {
         throw HttpError(404, 'book preview file was not found');
       }
-      // res.setHeader('Content-Type', '')
+      const stat = fs.statSync(file);
+      res.setHeader('Content-Length', stat.size);
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `inline; filename=${book.title}.pdf`);
       res.sendFile(file);
+    } catch (er) {
+      next(er);
+    }
+  };
+
+  static full = async (req, res, next) => {
+    try {
+      const { userID } = req;
+      const { bookId } = req.params;
+      const book = await Books.findByPk(bookId);
+      const bookFiles = await BookFiles.findOne({ where: { bookId } });
+      if (!book || !bookFiles.fullPDF) {
+        throw HttpError(404, 'book was not found');
+      }
+      // THIS PART OF CODE SHOULD BE IMPLIMENTED WHEN APP USERS HAVE PAID FOR AUDIO BOOK
+      const userBook = await UserBooks.findOne({ where: { bookId, userId: userID, status: 'paid' } });
+      if (!userBook) {
+        throw HttpError(402, 'payment is required');
+      }
+      const file = path.join(path.resolve(), 'public', bookFiles.fullPDF);
+      const stat = fs.statSync(file);
+      res.setHeader('Content-Length', stat.size);
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `inline; filename=${book.title}.pdf`);
+      const fileStream = fs.createReadStream(file);
+      fileStream.on('error', (er) => {
+        next(er);
+      });
+      fileStream.pipe(res);
+    } catch (er) {
+      next(er);
+    }
+  };
+
+  static audio = async (req, res, next) => {
+    try {
+      const { userID } = req;
+      const { bookId } = req.params;
+      const { range } = req.headers;
+      if (!range) {
+        res.status(400).send('range header is required');
+      }
+      const book = await Books.findByPk(bookId);
+      const bookFiles = await BookFiles.findOne({ where: { bookId } });
+      if (!book || !bookFiles.audio) {
+        throw HttpError(404, 'book was not found');
+      }
+      // THIS PART OF CODE SHOULD BE IMPLIMENTED WHEN APP USERS HAVE PAID FOR AUDIO BOOK
+      const userBook = await UserBooks.findOne({ where: { bookId, userId: userID, status: 'paid' } });
+      if (!userBook) {
+        throw HttpError(402, 'payment is required');
+      }
+      const file = path.join(path.resolve(), 'public', bookFiles.audio);
+      const { size } = fs.statSync(file);
+      const start = Number(range.replace(/\D/g, ''));
+      const end = Math.min(start + 1 * 1024 * 1024, size - 1);
+      // Create headers
+      const contentLength = end - start + 1;
+      const headers = {
+        'Content-Range': `bytes ${start}-${end}/${size}`,
+        'Accept-Ranges': 'bytes',
+        'Content-Length': contentLength,
+        'Content-Type': 'audio/mpeg',
+      };
+
+      const audioStream = fs.createReadStream(file, { start, end });
+      // Stream the audio chunk to the client
+      audioStream.pipe(res);
+      audioStream.on('error', (er) => {
+        next(er);
+      });
+
+      res.writeHead(206, headers);
     } catch (er) {
       next(er);
     }

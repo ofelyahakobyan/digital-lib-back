@@ -19,7 +19,7 @@ router.delete('/:bookId', validate(books.single), BooksController.delete);
 router.get('/:bookId/preview', validate(books.single), BooksController.preview);
 
 // logged-in user endpoints
-// router.get('/:bookId/full', validate(books.single), BooksController.preview);
-// router.get('/:bookId/audio', validate(books.single), BooksController.preview);
+router.get('/:bookId/full', validate(books.single), BooksController.full);
+router.get('/:bookId/audio', validate(books.single), BooksController.audio);
 
 export default router;

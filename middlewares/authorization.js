@@ -12,11 +12,8 @@ const EXCLUDE = [
   `GET:${BASE_URL}/authors`,
 ];
 const EXCLUDE_VAR = [
-  // `GET:${BASE_URL}/books/single`,
   `GET:${BASE_URL}/authors/single`,
   `GET:${BASE_URL}/books/reviews`,
-  // `GET:${BASE_URL}/books/author`,
-  // `GET:${BASE_URL}/books/category`,
   `GET:${BASE_URL}/books`,
   'GET:/images',
 ];
@@ -31,7 +28,7 @@ const authorization = (req, res, next) => {
     const { path, method } = req;
     for (let i = 0; i < EXCLUDE_VAR.length; i += 1) {
       if (`${method}:${path}`.startsWith(EXCLUDE_VAR[i])) {
-        return next();
+        if (!`${method}:${path}`.includes('full') && !`${method}:${path}`.includes('audio')) return next();
       }
     }
     if (EXCLUDE.includes(`${method}:${path}`)) {

@@ -19,10 +19,6 @@ const EXCLUDE = [
 ];
 
 const EXCLUDE_VAR = [
-  // `GET:${BASE_URL}/books/reviews`,
-  // `GET:${BASE_URL}/books/single`,
-  // `GET:${BASE_URL}/books/author`,
-  // `GET:${BASE_URL}/books/category`,
   `GET:${BASE_URL}/books`,
   `POST:${BASE_URL}/user/reviews`,
   `PATCH:${BASE_URL}/user/reviews`,
