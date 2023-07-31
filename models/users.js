@@ -29,7 +29,6 @@ Users.init(
     },
     password: {
       type: DataTypes.CHAR(32),
-      allowNull: false,
       get() {
         return undefined;
       },
@@ -57,6 +56,7 @@ Users.init(
       type: BOOLEAN,
       defaultValue: false,
     },
+    googleId: { type: DataTypes.STRING },
     verificationCode: {
       type: DataTypes.STRING,
       allowNull: false,

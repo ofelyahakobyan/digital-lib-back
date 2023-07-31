@@ -7,7 +7,8 @@ import indexRouter from './routes';
 import cors from './middlewares/cors';
 import authorization from './middlewares/authorization';
 import adminAuthorization from './middlewares/adminAuthorization';
-import facebookAuth from './middlewares/socialAuth';
+import facebookAuth from './middlewares/facebookAuth';
+import googleAuth from './middlewares/googleAuth';
 import publicRoutesParser from './middlewares/publicRoutesParser';
 
 const app = express();
@@ -19,6 +20,7 @@ app.use(publicRoutesParser);
 app.use(adminAuthorization);
 app.use(authorization);
 app.use(facebookAuth);
+app.use(googleAuth);
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

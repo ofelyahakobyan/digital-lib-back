@@ -10,6 +10,10 @@ const PUBLIC_ROUTES = [
   `GET:${BASE_URL}/authors`,
   `GET:${BASE_URL}/categories`,
   `GET:${BASE_URL}/reviews`,
+  `GET:${BASE_URL}/user/auth-facebook`,
+  `GET:${BASE_URL}/user/facebook`,
+  `GET:${BASE_URL}/user/auth-google`,
+  `GET:${BASE_URL}/user/google`,
 ];
 
 const publicRoutesParser = (req, res, next) => {

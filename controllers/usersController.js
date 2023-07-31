@@ -104,6 +104,38 @@ class UsersController {
     }
   };
 
+  static googleAuth = async (req, res, next) => {
+    try {
+      let message = '';
+      const { user } = req;
+      let systemUser = await Users.findOne({ where: { email: user.emails[0].value } });
+
+      if (!systemUser) {
+        systemUser = await Users.create({
+          firstName: user.name.givenName,
+          lastName: user.name.familyName || '',
+          email: user.emails[0].value,
+          googleId: user.id,
+        });
+        message = 'new user has successfully registered';
+      }
+      const token = jwt.sign(
+        { userID: user.id, isAdmin: user.isAdmin },
+        JWT_SECRET,
+      );
+      message = 'user has successfully logged in';
+      res.status(200).json({
+        code: res.statusCode,
+        status: 'success',
+        message,
+        token,
+        user: systemUser,
+      });
+    } catch (er) {
+      next(er);
+    }
+  };
+
   // logged-in  user role is required
   static getProfile = async (req, res, next) => {
     try {

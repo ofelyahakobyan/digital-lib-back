@@ -8,6 +8,8 @@ import uploader from '../middlewares/avatarUploader';
 import reviews from '../schemas/reviews';
 import reviewsController from '../controllers/reviewsController';
 import userBooks from '../schemas/userBooks';
+import { Users } from '../models';
+import usersController from '../controllers/usersController';
 
 const router = express.Router();
 
@@ -19,11 +21,19 @@ router.delete('/profile', UsersController.deleteProfile);
 router.post('/password-forgot', validate(users.passwordForgot), UsersController.forgotPassword);
 router.post('/password-reset', validate(users.passwordReset), UsersController.resetPassword);
 router.post('/password-change', validate(users.changePassword), UsersController.changePassword);
-//  Social media authentication
-router.get('/login-facebook', passport.authenticate('facebook', { session: false }));
-// callback url
+//  facebook  authentication
+router.get('/auth-facebook', passport.authenticate('facebook', { session: false }));
+// facebook callback url
 router.get('/facebook', passport.authenticate('facebook', { session: false }), (req, res) => res.send(req.user ? req.user : 'does not exists'));
 
+//  google  authentication
+router.get('/auth-google', passport.authenticate('google', { session: false, scope: ['profile', 'email'] }));
+// google callback url
+router.get(
+  '/google',
+  passport.authenticate('google', { session: false }),
+  usersController.googleAuth,
+);
 // user Books
 router.get('/wishlist', validate(userBooks.wishlist), UserBooksController.wishlist);
 router.post('/wishlist/:bookId', validate(userBooks.add), UserBooksController.wishlistAdd);

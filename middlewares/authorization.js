@@ -6,8 +6,6 @@ const EXCLUDE = [
   `GET:${BASE_URL}/books`,
   `GET:${BASE_URL}/books/search`,
   `GET:${BASE_URL}/users`,
-  `GET:${BASE_URL}/user/login-facebook`,
-  `GET:${BASE_URL}/user/facebook`,
   `GET:${BASE_URL}/categories`,
   `GET:${BASE_URL}/authors`,
 ];
