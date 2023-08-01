@@ -14,6 +14,7 @@ import {
   CreditCards,
   Transactions,
   TransactionDetails,
+  Subscribers,
 } from '../models/index';
 
 const models = [
@@ -32,6 +33,7 @@ const models = [
   CreditCards,
   Transactions,
   TransactionDetails,
+  Subscribers,
 
 ];
 

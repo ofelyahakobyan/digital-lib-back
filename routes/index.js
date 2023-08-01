@@ -1,5 +1,4 @@
 import express from 'express';
-import path from 'path';
 import users from './users';
 import singleUser from './singleUser';
 import books from './books';
@@ -7,6 +6,7 @@ import categories from './categories';
 import authors from './authors';
 import reviews from './reviews';
 import publishers from './publishers';
+import subscribers from './subscribers';
 
 const router = express.Router();
 
@@ -18,6 +18,7 @@ router.use('/categories', categories);
 router.use('/authors', authors);
 router.use('/publishers', publishers);
 router.use('/reviews', reviews);
+router.use('/subscribers', subscribers);
 router.get('/', (req, res) => {
   console.log(req.cookies);
   res.json({

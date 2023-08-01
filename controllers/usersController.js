@@ -30,7 +30,7 @@ class UsersController {
         totalPages: Math.ceil(total / limit),
         limit,
         total,
-        data: { users },
+        users,
       });
     } catch (er) {
       next(er);

@@ -7,6 +7,7 @@ const PUBLIC_ROUTES = [
   `POST:${BASE_URL}/user/login`,
   `POST:${BASE_URL}/user/password-forgot`,
   `POST:${BASE_URL}/user/password-reset`,
+  `POST:${BASE_URL}/subscribers/add`,
   `GET:${BASE_URL}/authors`,
   `GET:${BASE_URL}/categories`,
   `GET:${BASE_URL}/reviews`,
