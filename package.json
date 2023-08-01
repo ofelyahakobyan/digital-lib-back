@@ -34,6 +34,7 @@
     "passport-google-oauth20": "^2.0.0",
     "sequelize": "^6.31.1",
     "sharp": "^0.32.3",
+    "stripe": "^12.16.0",
     "uuid": "^9.0.0"
   },
   "devDependencies": {

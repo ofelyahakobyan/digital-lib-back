@@ -17,8 +17,8 @@ const { BASE_URL } = process.env;
 
 app.use(cors);
 app.use(publicRoutesParser);
-// app.use(adminAuthorization);
-// app.use(authorization);
+app.use(adminAuthorization);
+app.use(authorization);
 app.use(facebookAuth);
 app.use(googleAuth);
 app.use(logger('dev'));

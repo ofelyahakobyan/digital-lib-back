@@ -7,6 +7,7 @@ import authors from './authors';
 import reviews from './reviews';
 import publishers from './publishers';
 import subscribers from './subscribers';
+import orders from './orders.js';
 
 const router = express.Router();
 
@@ -19,6 +20,7 @@ router.use('/authors', authors);
 router.use('/publishers', publishers);
 router.use('/reviews', reviews);
 router.use('/subscribers', subscribers);
+router.use('/orders', orders);
 router.get('/', (req, res) => {
   console.log(req.cookies);
   res.json({

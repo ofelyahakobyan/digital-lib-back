@@ -14,6 +14,7 @@ const EXCLUDE = [
   `GET:${BASE_URL}/categories`,
   `GET:${BASE_URL}/authors`,
   `DELETE:${BASE_URL}/user/profile`,
+  `POST:${BASE_URL}/orders/checkout-session`,
 ];
 
 const EXCLUDE_VAR = [
