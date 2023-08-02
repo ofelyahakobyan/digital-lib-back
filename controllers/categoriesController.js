@@ -83,6 +83,24 @@ class CategoriesController {
       next(er);
     }
   };
+
+  // public
+  static single = async (req, res, next) => {
+    try {
+      const { category } = req.params;
+      const cat = await Categories.findOne({ where: { category }, attributes: ['id', 'category'] });
+      if (!cat) {
+        throw HttpError(404, 'category with that name does not exist');
+      }
+      res.status(200).json({
+        code: res.statusCode,
+        status: 'success',
+        category: cat,
+      });
+    } catch (er) {
+      next(er);
+    }
+  };
 }
 
 export default CategoriesController;

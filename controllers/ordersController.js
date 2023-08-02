@@ -2,9 +2,8 @@ import { Stripe } from 'stripe';
 import { Books, Users } from '../models';
 
 const { STRIPE_SECRET_KEY } = process.env;
-
 const stripe = Stripe(STRIPE_SECRET_KEY);
-// console.log(stripe);
+
 class OrdersController {
   static getCheckoutSession = async (req, res, next) => {
     try {

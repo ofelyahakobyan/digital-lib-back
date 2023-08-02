@@ -20,5 +20,6 @@ const categories = {
       parentCategory: Joi.string().trim().regex(/^[a-zA-Z]+$/),
     }),
   },
+  single: { params: Joi.object({ category: Joi.string().pattern(/^[a-zA-Z0-9\s-]+$/).required() }) },
 };
 export default categories;

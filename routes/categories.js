@@ -7,6 +7,8 @@ const router = express.Router();
 
 // public
 router.get('/', validate(categories.list), categoriesController.list);
+// public
+router.get('/:category', validate(categories.single), categoriesController.single);
 // admin
 router.post('/add', validate(categories.add), categoriesController.add);
 // admin

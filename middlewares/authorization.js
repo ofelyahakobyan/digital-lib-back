@@ -12,6 +12,7 @@ const EXCLUDE = [
 const EXCLUDE_VAR = [
   `GET:${BASE_URL}/authors/single`,
   `GET:${BASE_URL}/books/reviews`,
+  `GET:${BASE_URL}/categories`,
   `GET:${BASE_URL}/books`,
   'GET:/images',
 ];
