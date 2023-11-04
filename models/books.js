@@ -16,10 +16,7 @@ Books.init(
       type: DataTypes.STRING,
       allowNull: false,
     },
-    price: {
-      type: DataTypes.DOUBLE(12, 4),
-      allowNull: false,
-    },
+    price: { type: DataTypes.DOUBLE(12, 4) },
     description: { type: DataTypes.TEXT },
     coverImage: { type: DataTypes.STRING },
     language: {

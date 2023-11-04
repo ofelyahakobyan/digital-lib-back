@@ -11,6 +11,7 @@ const operatorsAliases = {
   $like: Op.like,
   $in: Op.in,
   $contains: Op.contains,
+  $is: Op.is,
 };
 
 const sequelize = new Sequelize(MYSQL_DATABASE, MYSQL_USER, MYSQL_PASSWORD, {

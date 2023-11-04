@@ -9,8 +9,9 @@ const users = {
   },
   login: {
     body: Joi.object({
-      email: Joi.string().email().lowercase().required(),
-      password: Joi.string().min(4).required(),
+      email: Joi.string().email().lowercase().required()
+        .messages({ 'string.empty': 'email is required' }),
+      password: Joi.string().min(4).required().messages({ 'string.empty': 'password is required' }),
     }),
   },
   registration: {

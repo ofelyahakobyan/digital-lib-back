@@ -43,7 +43,7 @@ class UsersController {
       const { firstName, lastName = '', email, password } = req.body;
       const existingUser = await Users.findOne({ where: { email } });
       if (existingUser) {
-        throw HttpError(409, 'user with this email already registered');
+        throw HttpError(409, { error: { message: 'user with this email already registered' } });
       }
       const user = await Users.create({
         firstName,
@@ -85,7 +85,7 @@ class UsersController {
         },
       });
       if (!user) {
-        throw HttpError(404, 'invalid username or password');
+        throw HttpError(404, { error: { message: 'invalid username or password' } });
       }
       const token = jwt.sign(
         { userID: user.id, isAdmin: user.isAdmin },
@@ -238,7 +238,7 @@ class UsersController {
       await user.save();
       Mail.send(email, 'Reset Password', 'resetPassword', {
         email,
-        firstName: user.firstName,
+        firstName: user.firstName || 'user',
         lastName: user.lastName,
         verificationCode,
       });

@@ -17,6 +17,7 @@ router.post('/add', bookUploader, validate(books.add), BooksController.add);
 router.patch('/:bookId', bookUploader, validate(books.single), BooksController.edit);
 router.delete('/:bookId', validate(books.single), BooksController.delete);
 router.get('/:bookId/preview', validate(books.single), BooksController.preview);
+router.get('/:bookId/download', validate(books.download), BooksController.download);
 
 // logged-in user endpoints
 router.get('/:bookId/full', validate(books.single), BooksController.full);

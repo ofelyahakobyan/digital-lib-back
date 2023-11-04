@@ -13,7 +13,7 @@ const validate = (schema) => (req, res, next) => {
     if (error) {
       const errorDetails = {};
       error.details?.forEach((d) => {
-        errorDetails[`${d.context.key}`] = d.message.replace(`${d.context.label} `, '');
+        errorDetails[`${d.context.key}`] = d.message.replace(`${d.context.label}`, `${d.context.key}`);
       });
       throw HttpError(422, { error: errorDetails });
     }

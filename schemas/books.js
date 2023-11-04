@@ -65,6 +65,7 @@ const books = {
       bestseller: Joi.boolean().default(false),
     }),
   },
+  download: { params: Joi.object({ bookId: Joi.number().integer().positive().required() }) },
 
 };
 export default books;

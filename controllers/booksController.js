@@ -2,6 +2,8 @@ import HttpError from 'http-errors';
 import path from 'path';
 import fs from 'fs';
 import { Worker, isMainThread } from 'node:worker_threads';
+import jwt from 'jsonwebtoken';
+import { Op } from 'sequelize';
 import sequelize from '../services/sequelize';
 import {
   Books,
@@ -11,9 +13,12 @@ import {
   BookCategories,
   BookFiles,
   UserBooks,
+  Downloads,
 } from '../models';
 import fileRemover from '../helpers/fileRemover';
 import fileNameDefiner from '../helpers/fileNameDefiner';
+
+const { JWT_SECRET } = process.env;
 
 class BooksController {
   static list = async (req, res, next) => {
@@ -718,7 +723,7 @@ class BooksController {
       if (!book || !bookFiles.fullPDF) {
         throw HttpError(404, 'book was not found');
       }
-      // THIS PART OF CODE SHOULD BE IMPLIMENTED WHEN APP USERS HAVE PAID FOR AUDIO BOOK
+      // THIS PART OF CODE SHOULD BE IMPLEMENTED WHEN APP USERS HAVE PAID FOR AUDIO BOOK
       const userBook = await UserBooks.findOne({ where: { bookId, userId: userID, status: 'paid' } });
       if (!userBook) {
         throw HttpError(402, 'payment is required');
@@ -751,7 +756,7 @@ class BooksController {
       if (!book || !bookFiles.audio) {
         throw HttpError(404, 'book was not found');
       }
-      // THIS PART OF CODE SHOULD BE IMPLIMENTED WHEN APP USERS HAVE PAID FOR AUDIO BOOK
+      // THIS PART OF CODE SHOULD BE IMPLEMENTED WHEN APP USERS HAVE PAID FOR AUDIO BOOK
       const userBook = await UserBooks.findOne({ where: { bookId, userId: userID, status: 'paid' } });
       if (!userBook) {
         throw HttpError(402, 'payment is required');
@@ -781,6 +786,44 @@ class BooksController {
       next(er);
     }
   };
+
+  // download book
+
+  static download = async (req, res, next) => {
+    try {
+      const { bookId, type } = req.params;
+
+      const { authorization = '' } = req.headers;
+      let userId;
+      if (authorization) {
+        const { userID } = jwt.verify(authorization.replace('Bearer ', ''), JWT_SECRET);
+        userId = userID;
+      }
+      const book = await Books.findOne({ where: { $and: [{ price: { $is: null } }, { id: bookId }] } });
+      if (!book) {
+        throw HttpError(422, 'book is not available for download');
+      }
+      const bookObj = { id: null, bookId: +bookId, userId: userId || null };
+      const download = await Downloads.create(bookObj);
+
+      res.status(200).json({
+        code: res.statusCode,
+        status: 'success',
+        download,
+        book,
+      });
+    } catch (er) {
+      next(er);
+    }
+  };
+
+  // get books statistics
+
+  // static statistics = async (req, res, next) => {
+  //   try {} catch (er) {
+  //     next(er);
+  //   }
+  // };
 }
 
 export default BooksController;
