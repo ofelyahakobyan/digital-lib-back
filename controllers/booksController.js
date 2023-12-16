@@ -3,7 +3,6 @@ import path from 'path';
 import fs from 'fs';
 import { Worker, isMainThread } from 'node:worker_threads';
 import jwt from 'jsonwebtoken';
-import { Op } from 'sequelize';
 import sequelize from '../services/sequelize';
 import {
   Books,
@@ -69,6 +68,7 @@ class BooksController {
           where: { categoryId: { $or: [categoryIds] } },
           raw: true,
         });
+        // eslint-disable-next-line no-unused-vars
         itemsByCategories = items.map((item) => item.bookId);
       }
       if (popular) {
@@ -82,9 +82,14 @@ class BooksController {
       }
       const mask = { $like: `%${q}%` };
       if (q) {
-        // categoryId = '';
-        // where = initialConditions;
-        const cats = await Categories.findOne({ where: { category: { $like: `%${q}%` } } });
+        let itemsByCategories = [];
+        const cats = await Categories.findOne(
+          {
+            raw: true,
+            where:
+              { category: { $like: `%${q}%` } },
+          },
+        );
         if (cats && !categoryIds.length) {
           const items = await BookCategories.findAll({ where: { categoryId: cats.id }, raw: true });
           itemsByCategories = items.map((item) => item.bookId);
@@ -93,27 +98,23 @@ class BooksController {
           { title: mask },
           { description: mask },
           { language: mask },
+          { id: { $in: itemsByCategories } },
           { '$author.firstName$': mask },
           { '$author.lastName$': mask },
         ];
       }
-      if (itemsByCategories.length) {
-        where.id = { $or: [itemsByCategories] };
-      }
+
       page = +page;
       limit = +limit;
       const offset = (page - 1) * limit;
-      const total = await Books.count({ where });
+
       const books = await Books.findAll({
-        limit,
-        offset,
+        subQuery: false,
         attributes: {
           exclude: [
             'createdAt',
             'updatedAt',
-            'description',
             'publisherId',
-            'coverImage',
           ],
           include: [
             [
@@ -130,13 +131,11 @@ class BooksController {
             ],
           ],
         },
-        where,
         include: [
           {
             model: Authors,
             as: 'author',
-            required: true,
-            attributes: { exclude: ['bio', 'dob', 'createdAt', 'updatedAt'] },
+            attributes: { exclude: ['bio', 'dob', 'createdAt', 'updatedAt'], include: ['firstName'] },
           },
           {
             model: Categories,
@@ -161,7 +160,22 @@ class BooksController {
             attributes: { exclude: ['createdAt', 'updatedAt'] },
           },
         ],
+        where,
+        limit,
+        offset,
       });
+      const total = await Books.count({
+        include: [
+          {
+            model: Authors,
+            as: 'author',
+            required: true,
+            attributes: { exclude: ['bio', 'dob', 'createdAt', 'updatedAt'], include: ['firstName'] },
+          },
+        ],
+        where,
+      });
+
       res.status(200).json({
         code: res.statusCode,
         status: 'success',
@@ -170,13 +184,13 @@ class BooksController {
         limit,
         total,
         books,
+
       });
     } catch (er) {
       next(er);
     }
   };
 
-  // public
   static authorList = async (req, res, next) => {
     try {
       let { page = 1, limit = 4 } = req.query;
@@ -249,15 +263,17 @@ class BooksController {
       page = +page;
       limit = +limit;
       const offset = (page - 1) * limit;
-      const total = await Books.count({
-        include:
-      {
-        model: Categories,
-        as: 'categories',
-        where: { id: categoryId },
-        through: { attributes: [] },
-      },
-      });
+      const total = await Books.count(
+        {
+          include:
+            {
+              model: Categories,
+              as: 'categories',
+              where: { id: categoryId },
+              through: { attributes: [] },
+            },
+        },
+      );
       const books = await Books.findAll({
         limit,
         offset,
@@ -791,7 +807,7 @@ class BooksController {
 
   static download = async (req, res, next) => {
     try {
-      const { bookId, type } = req.params;
+      const { bookId } = req.params;
 
       const { authorization = '' } = req.headers;
       let userId;
@@ -799,7 +815,9 @@ class BooksController {
         const { userID } = jwt.verify(authorization.replace('Bearer ', ''), JWT_SECRET);
         userId = userID;
       }
-      const book = await Books.findOne({ where: { $and: [{ price: { $is: null } }, { id: bookId }] } });
+      const book = await Books.findOne(
+        { where: { $and: [{ price: { $is: null } }, { id: bookId }] } },
+      );
       if (!book) {
         throw HttpError(422, 'book is not available for download');
       }
