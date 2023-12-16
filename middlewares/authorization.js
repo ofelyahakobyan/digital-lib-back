@@ -1,47 +1,31 @@
 import jwt from 'jsonwebtoken';
 import HttpError from 'http-errors';
 
-const { JWT_SECRET, BASE_URL } = process.env;
-const EXCLUDE = [
-  `GET:${BASE_URL}/books`,
-  `GET:${BASE_URL}/books/search`,
-  `GET:${BASE_URL}/users`,
-  `GET:${BASE_URL}/categories`,
-  `GET:${BASE_URL}/authors`,
-];
-const EXCLUDE_VAR = [
-  `GET:${BASE_URL}/authors/single`,
-  `GET:${BASE_URL}/books/reviews`,
-  `GET:${BASE_URL}/categories`,
-  `GET:${BASE_URL}/books`,
-  'GET:/images',
-];
-const authorization = (req, res, next) => {
+const { JWT_SECRET } = process.env;
+
+const authorization = (type) => (req, res, next) => {
   try {
-    if (req.public) {
-      return next();
-    }
-    if (req.isAdmin) {
-      return next();
-    }
-    const { path, method } = req;
-    for (let i = 0; i < EXCLUDE_VAR.length; i += 1) {
-      if (`${method}:${path}`.startsWith(EXCLUDE_VAR[i])) {
-        if (!`${method}:${path}`.includes('full') && !`${method}:${path}`.includes('audio')) return next();
-      }
-    }
-    if (EXCLUDE.includes(`${method}:${path}`)) {
-      return next();
-    }
     const { authorization = '' } = req.headers;
     if (!authorization) {
       throw HttpError(401);
     }
-    const { userID } = jwt.verify(authorization.replace('Bearer ', ''), JWT_SECRET);
-    if (!userID) {
-      throw HttpError(401);
+    if (type === 'login') {
+      const { userID } = jwt.verify(authorization.replace('Bearer ', ''), JWT_SECRET);
+      if (!userID) {
+        throw HttpError(401);
+      }
+      req.userID = userID;
+      return next();
     }
-    req.userID = userID;
+    if (type === 'admin') {
+      const { userID, isAdmin } = jwt.verify(authorization.replace('Bearer ', ''), JWT_SECRET);
+      if (!userID || !isAdmin) {
+        throw HttpError(403);
+      }
+      req.userID = userID;
+      req.isAdmin = isAdmin;
+      return next();
+    }
     return next();
   } catch (er) {
     return next(er);

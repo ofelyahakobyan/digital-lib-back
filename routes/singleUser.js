@@ -1,6 +1,5 @@
 import express from 'express';
 import passport from 'passport';
-import UsersController from '../controllers/usersController';
 import validate from '../middlewares/validate';
 import users from '../schemas/user';
 import UserBooksController from '../controllers/userBooksController';
@@ -8,16 +7,16 @@ import uploader from '../middlewares/avatarUploader';
 import reviews from '../schemas/reviews';
 import reviewsController from '../controllers/reviewsController';
 import userBooks from '../schemas/userBooks';
-import { Users } from '../models';
-import usersController from '../controllers/usersController';
+import authorization from '../middlewares/authorization';
+import UsersController from '../controllers/usersController';
 
 const router = express.Router();
 
 router.post('/registration', validate(users.registration), UsersController.registration);
 router.post('/login', validate(users.login), UsersController.login);
-router.get('/profile', UsersController.getProfile);
-router.patch('/profile', uploader, validate(users.edit), UsersController.editProfile);
-router.delete('/profile', UsersController.deleteProfile);
+router.get('/profile', authorization('login'), UsersController.getProfile);
+router.patch('/profile', authorization('login'), uploader, validate(users.edit), UsersController.editProfile);
+router.delete('/profile', authorization('login'), UsersController.deleteProfile);
 router.post('/password-forgot', validate(users.passwordForgot), UsersController.forgotPassword);
 router.post('/password-reset', validate(users.passwordReset), UsersController.resetPassword);
 router.post('/password-change', validate(users.changePassword), UsersController.changePassword);
@@ -32,7 +31,7 @@ router.get('/auth-google', passport.authenticate('google', { session: false, sco
 router.get(
   '/google',
   passport.authenticate('google', { session: false }),
-  usersController.googleAuth,
+  UsersController.googleAuth,
 );
 // user Books
 router.get('/wishlist', validate(userBooks.wishlist), UserBooksController.wishlist);

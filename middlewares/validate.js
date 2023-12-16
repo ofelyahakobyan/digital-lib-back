@@ -1,8 +1,13 @@
 import Joi from 'joi';
 import HttpError from 'http-errors';
+import _ from 'lodash';
 
 const validate = (schema) => (req, res, next) => {
   try {
+    if (!_.isEmpty(req.body)) {
+      // eslint-disable-next-line no-return-assign
+      Object.entries(req.body).map((e) => req.body[e[0]] = e[1].trim());
+    }
     // eslint-disable-next-line no-unused-vars
     const { value, error } = Joi.object(schema).unknown().validate(req, {
       abortEarly: false,

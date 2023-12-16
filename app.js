@@ -5,22 +5,16 @@ import logger from 'morgan';
 import HttpError from 'http-errors';
 import indexRouter from './routes';
 import cors from './middlewares/cors';
-import authorization from './middlewares/authorization';
-import adminAuthorization from './middlewares/adminAuthorization';
-import facebookAuth from './middlewares/facebookAuth';
-import googleAuth from './middlewares/googleAuth';
-import publicRoutesParser from './middlewares/publicRoutesParser';
+// import facebookAuth from './middlewares/facebookAuth';
+// import googleAuth from './middlewares/googleAuth';
 
 const app = express();
 
 const { BASE_URL } = process.env;
 
 app.use(cors);
-app.use(publicRoutesParser);
-app.use(adminAuthorization);
-app.use(authorization);
-app.use(facebookAuth);
-app.use(googleAuth);
+// app.use(facebookAuth);
+// app.use(googleAuth);
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
