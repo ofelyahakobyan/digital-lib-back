@@ -6,5 +6,5 @@ import authorization from '../middlewares/authorization';
 
 const router = express.Router();
 
-router.post('/checkout-session', authorization('login'), validate(orders.checkoutSession), OrdersController.getCheckoutSession);
+router.post('/checkout-session', /* validate(orders.checkoutSession), */ authorization('login'), OrdersController.getCheckoutSession);
 export default router;
