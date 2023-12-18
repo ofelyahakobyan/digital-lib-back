@@ -7,7 +7,7 @@ import authors from './authors';
 import reviews from './reviews';
 import publishers from './publishers';
 import subscribers from './subscribers';
-import orders from './orders.js';
+import orders from './orders';
 
 const router = express.Router();
 
