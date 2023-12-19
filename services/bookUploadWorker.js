@@ -16,6 +16,7 @@ const processFiles = async () => {
       await imageResizer(files.cover[0].path, { width: 387, fit: 'contain' }, `${fullPath}/L-${cover}`);
     }
     if (files.preview) {
+      console.log('files previews');
       const newPath = path.join(path.resolve(), 'public/books/previews', preview);
       fs.renameSync(files.preview[0].path, newPath);
     }

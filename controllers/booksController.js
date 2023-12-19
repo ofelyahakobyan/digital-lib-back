@@ -763,41 +763,31 @@ class BooksController {
     try {
       const { userID } = req;
       const { bookId } = req.params;
-      const { range } = req.headers;
-      if (!range) {
-        res.status(400).send('range header is required');
-      }
+
       const book = await Books.findByPk(bookId);
       const bookFiles = await BookFiles.findOne({ where: { bookId } });
       if (!book || !bookFiles.audio) {
         throw HttpError(404, 'book was not found');
       }
       // THIS PART OF CODE SHOULD BE IMPLEMENTED WHEN APP USERS HAVE PAID FOR AUDIO BOOK
-      const userBook = await UserBooks.findOne({ where: { bookId, userId: userID, status: 'paid' } });
+      const userBook = await UserBooks.findOne({ where: { bookId, status: 'paid' } });
       if (!userBook) {
         throw HttpError(402, 'payment is required');
       }
       const file = path.join(path.resolve(), 'public', bookFiles.audio);
       const { size } = fs.statSync(file);
-      const start = Number(range.replace(/\D/g, ''));
-      const end = Math.min(start + 1 * 1024 * 1024, size - 1);
-      // Create headers
-      const contentLength = end - start + 1;
       const headers = {
-        'Content-Range': `bytes ${start}-${end}/${size}`,
-        'Accept-Ranges': 'bytes',
-        'Content-Length': contentLength,
+        'Content-Length': size,
         'Content-Type': 'audio/mpeg',
+        'Accept-Ranges': 'bytes',
       };
-
-      const audioStream = fs.createReadStream(file, { start, end });
+      res.set(headers);
+      const audioStream = fs.createReadStream(file);
       // Stream the audio chunk to the client
       audioStream.pipe(res);
       audioStream.on('error', (er) => {
         next(er);
       });
-
-      res.writeHead(206, headers);
     } catch (er) {
       next(er);
     }

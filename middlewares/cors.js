@@ -12,7 +12,7 @@ const cors = (req, res, next) => {
       );
       res.setHeader(
         'Access-Control-Allow-Headers',
-        'Content-Type, Authorization, X-Token',
+        'Content-Type, Authorization, X-Token, Range, range',
       );
       if (req.method === 'OPTIONS') {
         // Handle OPTIONS request (pre-flight)
