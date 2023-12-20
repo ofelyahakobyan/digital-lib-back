@@ -22,7 +22,7 @@ router.get('/:bookId/preview', validate(books.single), BooksController.preview);
 router.get('/:bookId/download', authorization('login'), validate(books.download), BooksController.download);
 
 // logged-in user endpoints
-router.get('/:bookId/full', authorization('login'), validate(books.single), BooksController.full);
+router.get('/:bookId/full', validate(books.single), BooksController.full);
 router.get('/:bookId/audio', validate(books.single), BooksController.audio);
 
 export default router;

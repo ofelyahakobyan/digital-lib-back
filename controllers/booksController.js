@@ -740,7 +740,7 @@ class BooksController {
         throw HttpError(404, 'book was not found');
       }
       // THIS PART OF CODE SHOULD BE IMPLEMENTED WHEN APP USERS HAVE PAID FOR AUDIO BOOK
-      const userBook = await UserBooks.findOne({ where: { bookId, userId: userID, status: 'paid' } });
+      const userBook = await UserBooks.findOne({ where: { bookId, status: 'paid' } });
       if (!userBook) {
         throw HttpError(402, 'payment is required');
       }
