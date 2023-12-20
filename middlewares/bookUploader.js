@@ -6,7 +6,6 @@ import os from 'os';
 
 const storage = multer.diskStorage({
   destination(req, file, cb) {
-    console.log(os.tmpdir());
     cb(null, os.tmpdir());
   },
   filename(req, file, cb) {

@@ -34,16 +34,16 @@ router.get(
   UsersController.googleAuth,
 );
 // user Books
-router.get('/wishlist', validate(userBooks.wishlist), UserBooksController.wishlist);
-router.post('/wishlist/:bookId', validate(userBooks.add), UserBooksController.wishlistAdd);
-router.delete('/wishlist/:bookId', validate(userBooks.delete), UserBooksController.wishlistDelete);
+router.get('/wishlist',authorization('login'), validate(userBooks.wishlist), UserBooksController.wishlist);
+router.post('/wishlist/:bookId', authorization('login'), validate(userBooks.add), UserBooksController.wishlistAdd);
+router.delete('/wishlist/:bookId', authorization('login'), validate(userBooks.delete), UserBooksController.wishlistDelete);
 
-router.get('/cart', validate(userBooks.cart), UserBooksController.cart);
-router.post('/cart/:bookId', validate(userBooks.add), UserBooksController.cartAdd);
-router.delete('/cart/:bookId', validate(userBooks.delete), UserBooksController.cartDelete);
+router.get('/cart', authorization('login'), validate(userBooks.cart), UserBooksController.cart);
+router.post('/cart/:bookId', authorization('login'), validate(userBooks.add), UserBooksController.cartAdd);
+router.delete('/cart/:bookId', authorization('login'), validate(userBooks.delete), UserBooksController.cartDelete);
 
-router.get('/reviews', validate(reviews.userList), reviewsController.userList);
-router.post('/reviews/:bookId', validate(reviews.add), reviewsController.add);
+router.get('/reviews',  validate(reviews.userList), reviewsController.userList);
+router.post('/reviews/:bookId',  validate(reviews.add), reviewsController.add);
 router.patch('/reviews/:reviewId', validate(reviews.userEdit), reviewsController.userEdit);
 router.delete('/reviews/:reviewId', validate(reviews.userDelete), reviewsController.userDelete);
 export default router;
