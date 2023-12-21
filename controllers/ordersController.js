@@ -39,7 +39,7 @@ class OrdersController {
         line_items: items,
         mode: 'payment',
       });
-      res.status(200).json({ status: 'success', session: session.id });
+      res.status(200).json({ status: 'success', session: session.url });
     } catch (er) {
       next(er);
     }
