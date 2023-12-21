@@ -15,3 +15,4 @@ export { default as Transactions } from './transactions';
 export { default as TransactionDetails } from './transactionDetails';
 export { default as Subscribers } from './subscribers';
 export { default as Downloads } from './downloads';
+export { default as Contacts } from './contacts';
