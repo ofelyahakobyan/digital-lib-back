@@ -48,7 +48,6 @@ class authorsController {
       next(er);
     }
   };
-
   // public
   static single = async (req, res, next) => {
     try {
@@ -79,7 +78,6 @@ class authorsController {
       next(er);
     }
   };
-
   // admin role is required
   static add = async (req, res, next) => {
     try {
@@ -119,7 +117,6 @@ class authorsController {
       next(er);
     }
   };
-
   // admin role is required (author id is required)
   static edit = async (req, res, next) => {
     try {

@@ -13,7 +13,7 @@ class ContactsController {
       });
 
       // TODO add some info into database contacts model
-      const contact = await Contacts.create({firstName, lastName, email});
+      const contact = await Contacts.create({ firstName, lastName, email });
       res.status(200).json(
         {
           status: 'success',

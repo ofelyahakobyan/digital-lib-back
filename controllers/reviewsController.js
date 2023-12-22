@@ -40,7 +40,6 @@ class ReviewsController {
       next(er);
     }
   };
-
   // logged-in  user role is required
   static userList = async (req, res, next) => {
     try {
@@ -73,7 +72,6 @@ class ReviewsController {
       next(er);
     }
   };
-
   // logged-in user role is required
   static add = async (req, res, next) => {
     try {
@@ -106,7 +104,6 @@ class ReviewsController {
       next(er);
     }
   };
-
   // logged-in role is required
   static userEdit = async (req, res, next) => {
     try {
@@ -134,7 +131,6 @@ class ReviewsController {
       next(er);
     }
   };
-
   // logged-in role is required
   static userDelete = async (req, res, next) => {
     try {
@@ -150,7 +146,6 @@ class ReviewsController {
       next(er);
     }
   };
-
   // admin role is required
   static adminEdit = async (req, res, next) => {
     try {
@@ -183,7 +178,6 @@ class ReviewsController {
       next(er);
     }
   };
-
   // admin role is required
   static adminDelete = async (req, res, next) => {
     try {
@@ -197,7 +191,6 @@ class ReviewsController {
       next(er);
     }
   };
-
   // public
   static bookList = async (req, res, next) => {
     try {
