@@ -1,5 +1,8 @@
 import { DataTypes, Model } from 'sequelize';
 import sequelize from '../services/sequelize';
+import Books from "./books.js";
+import Users from "./users.js";
+import UserBooks from "./userBooks.js";
 
 export default class Orders extends Model {
 }
@@ -43,3 +46,6 @@ Orders.init(
     modelName: 'orders',
   },
 );
+
+Books.belongsToMany(Users, { through: { model: Orders, unique: false, as: 'users' } });
+Users.belongsToMany(Books, { through: { model: Orders, unique: false, as: 'books' } });

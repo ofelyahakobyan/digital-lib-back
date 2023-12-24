@@ -17,6 +17,7 @@ import {
   Subscribers,
   Downloads,
   Contacts,
+  Orders,
 } from '../models/index';
 
 const models = [
@@ -38,6 +39,7 @@ const models = [
   Subscribers,
   Downloads,
   Contacts,
+  Orders
 ];
 
 async function main() {

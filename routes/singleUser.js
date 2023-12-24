@@ -42,8 +42,10 @@ router.get('/cart', authorization('login'), validate(userBooks.cart), UserBooksC
 router.post('/cart/:bookId', authorization('login'), validate(userBooks.add), UserBooksController.cartAdd);
 router.delete('/cart/:bookId', authorization('login'), validate(userBooks.delete), UserBooksController.cartDelete);
 
-router.get('/reviews',  validate(reviews.userList), reviewsController.userList);
-router.post('/reviews/:bookId',  validate(reviews.add), reviewsController.add);
+router.get('/reviews', validate(reviews.userList), reviewsController.userList);
+router.post('/reviews/:bookId', validate(reviews.add), reviewsController.add);
 router.patch('/reviews/:reviewId', validate(reviews.userEdit), reviewsController.userEdit);
 router.delete('/reviews/:reviewId', validate(reviews.userDelete), reviewsController.userDelete);
+
+router.get('/library', authorization('login'), UserBooksController.library);
 export default router;
