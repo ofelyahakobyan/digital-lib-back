@@ -82,7 +82,7 @@ class OrdersController {
 
           console.log(books, 111);
           await Promise.all(books.map(async book => {
-            book.status='confirmed';
+            book.status= 'confirmed';
             await book.save();
           }));
           const updated = await Orders.findAll({raw:true, where:{transaction}})

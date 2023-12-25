@@ -13,6 +13,7 @@ import {
   BookFiles,
   UserBooks,
   Downloads,
+  Orders
 } from '../models';
 import fileRemover from '../helpers/fileRemover';
 import fileNameDefiner from '../helpers/fileNameDefiner';
@@ -770,7 +771,7 @@ class BooksController {
         throw HttpError(404, 'book was not found');
       }
       // THIS PART OF CODE SHOULD BE IMPLEMENTED WHEN APP USERS HAVE PAID FOR AUDIO BOOK
-      const userBook = await UserBooks.findOne({ where: { bookId, status: 'paid' } });
+      const userBook = await Orders.findOne({ where: { bookId } });
       if (!userBook) {
         throw HttpError(402, 'payment is required');
       }
