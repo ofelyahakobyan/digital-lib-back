@@ -76,6 +76,7 @@ class ReviewsController {
   static add = async (req, res, next) => {
     try {
       const { userID } = req;
+      console.log(userID);
       const { bookId } = req.params;
       // Joi validation
       const book = await Books.findByPk(bookId);
