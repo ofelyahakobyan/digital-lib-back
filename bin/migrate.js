@@ -39,7 +39,7 @@ const models = [
   Subscribers,
   Downloads,
   Contacts,
-  Orders
+  Orders,
 ];
 
 async function main() {

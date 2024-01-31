@@ -171,6 +171,7 @@ class UsersController {
         dob,
         shortAbout,
       } = req.body;
+      console.log(firstName);
       const { file } = req;
       let avatar = '';
       if (file) {

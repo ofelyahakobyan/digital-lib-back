@@ -2,13 +2,13 @@
 
 import http from 'http';
 import Debug from 'debug';
+import { Server } from 'socket.io';
 import app from '../app';
 
 const debug = Debug('library-back:server');
 /**
  * Get port from environment and store in Express.
  */
-
 const port = normalizePort(process.env.PORT || '4000');
 app.set('port', port);
 
@@ -16,10 +16,22 @@ app.set('port', port);
  * Create HTTP server.
  */
 const server = http.createServer(app);
+const io = new Server(
+  server,
+  { cors: {
+    origin: 'http://localhost:3000',
+    methods: ['GET', 'POST']
+}
+  } );
 
 /**
  * Listen on provided port, on all network interfaces.
  */
+
+io.on('connection', (client) => {
+  console.log(client);
+  client.emit('hello', 'to all clients except sender');
+});
 
 server.listen(port);
 server.on('error', onError);

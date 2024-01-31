@@ -13,7 +13,7 @@ import {
   BookFiles,
   UserBooks,
   Downloads,
-  Orders
+  Orders,
 } from '../models';
 import fileRemover from '../helpers/fileRemover';
 import fileNameDefiner from '../helpers/fileNameDefiner';

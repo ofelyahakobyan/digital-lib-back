@@ -3,6 +3,7 @@ const ALLOW = ['http://localhost:3000', 'http://localhost:3001'];
 const cors = (req, res, next) => {
   try {
     const { origin } = req.headers;
+    console.log(cors);
     if (ALLOW.includes(origin)) {
       res.setHeader('Access-Control-Allow-Origin', origin);
       res.setHeader(

@@ -250,7 +250,7 @@ class UserBooksController {
       page = +page;
       limit = +limit;
       const offset = (page - 1) * limit;
-      const where = { userId: userID, status: 'confirmed'};
+      const where = { userId: userID, status: 'confirmed' };
       const total = await Orders.count({ where });
       const items = await Books.findAll(
         {

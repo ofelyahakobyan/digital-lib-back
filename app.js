@@ -5,6 +5,7 @@ import logger from 'morgan';
 import HttpError from 'http-errors';
 import indexRouter from './routes';
 import cors from './middlewares/cors';
+import './services/puppeteer';
 // import facebookAuth from './middlewares/facebookAuth';
 // import googleAuth from './middlewares/googleAuth';
 
@@ -15,6 +16,7 @@ const { BASE_URL } = process.env;
 app.use(cors);
 // app.use(facebookAuth);
 // app.use(googleAuth);
+
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
